@@ -1442,9 +1442,10 @@ export function MemberManagement({
     setPagination(prev => ({ ...prev, page: 1 }))
   }
 
-  const handleViewMember = (memberId: string) => {
-    router.push(`/members/${memberId}`)
-  }
+const handleViewMember = (memberId: string) => {
+  window.open(`/members/${memberId}`, "_blank", "noopener,noreferrer")
+}
+
 
   const exportToExcel = async () => {
     try {
@@ -1459,20 +1460,71 @@ export function MemberManagement({
       const data = await response.json()
 
       if (response.ok) {
-        // Create CSV content
-        const headers = ["Name", "Email", "Phone", "District", "State", "Status", "Membership ID", "Joined Date", "Is Volunteer"]
+        // Create CSV content with all fields
+        const headers = [
+          "Name", 
+          "Email", 
+          "Phone", 
+          "Mobile Number", 
+          "WhatsApp Number", 
+          "Is WhatsApp Same",
+          "Address", 
+          "State", 
+          "District", 
+          "Lok Sabha Constituency", 
+          "Vidhan Sabha Constituency", 
+          "Ward", 
+          "Tehsil", 
+          "Pincode", 
+          "Date of Birth", 
+          "Age", 
+          "Gender", 
+          "Member Type", 
+          "Occupation", 
+          "Membership ID", 
+          "Referral Code",
+          "Referred By",
+          "Joined Date", 
+          "Status", 
+          "Is Volunteer", 
+          "Volunteer Skills",
+          "Additional Info",
+          "Created At",
+          "Updated At"
+        ]
+        
         const csvContent = [
           headers.join(","),
           ...data.members.map((member: Member) => [
             `"${member.name || ''}"`,
             `"${member.email || ''}"`,
             `"${member.phone || ''}"`,
-            `"${member.district || ''}"`,
+            `"${member.mobileNumber || ''}"`,
+            `"${member.whatsappNumber || ''}"`,
+            `"${member.isWhatsAppSame ? 'Yes' : 'No'}"`,
+            `"${member.address || ''}"`,
             `"${member.state || ''}"`,
-            `"${member.status || ''}"`,
+            `"${member.district || ''}"`,
+            `"${member.lokSabha || ''}"`,
+            `"${member.vidhanSabha || ''}"`,
+            `"${member.ward || ''}"`,
+            `"${member.tehsil || ''}"`,
+            `"${member.pincode || ''}"`,
+            `"${member.dateOfBirth ? new Date(member.dateOfBirth).toLocaleDateString("en-IN") : ''}"`,
+            `"${member.age || ''}"`,
+            `"${member.gender || ''}"`,
+            `"${member.memberType || ''}"`,
+            `"${member.occupation || ''}"`,
             `"${member.membershipId || ''}"`,
+            `"${member.referralCode || ''}"`,
+            `"${member.referredBy || ''}"`,
             `"${member.joinedDate ? new Date(member.joinedDate).toLocaleDateString("en-IN") : ''}"`,
-            `"${member.isVolunteer ? "Yes" : "No"}"`
+            `"${member.status || ''}"`,
+            `"${member.isVolunteer ? "Yes" : "No"}"`,
+            `"${member.volunteerSkills?.join(', ') || ''}"`,
+            `"${member.additionalInfo || ''}"`,
+            `"${member.createdAt ? new Date(member.createdAt).toLocaleDateString("en-IN") : ''}"`,
+            `"${member.updatedAt ? new Date(member.updatedAt).toLocaleDateString("en-IN") : ''}"`
           ].join(","))
         ].join("\n")
 
@@ -1496,8 +1548,42 @@ export function MemberManagement({
 
   const exportSingleMemberToExcel = async (member: Member) => {
     try {
-      // Create CSV content for single member
-      const headers = ["Name", "Email", "Phone", "Mobile Number", "WhatsApp Number", "Address", "District", "State", "Lok Sabha", "Vidhan Sabha", "Ward", "Tehsil", "Pincode", "Date of Birth", "Age", "Gender", "Member Type", "Occupation", "Status", "Membership ID", "Joined Date", "Is Volunteer", "Volunteer Skills"]
+      // Create CSV content for single member with all fields
+      const headers = [
+        "Name", 
+        "Email", 
+        "Phone", 
+        "Mobile Number", 
+        "WhatsApp Number", 
+        "Is WhatsApp Same",
+        "Address", 
+        "State", 
+        "District", 
+        "Lok Sabha Constituency", 
+        "Vidhan Sabha Constituency", 
+        "Ward", 
+        "Tehsil", 
+        "Pincode", 
+        "Date of Birth", 
+        "Age", 
+        "Gender", 
+        "Member Type", 
+        "Occupation", 
+        "Membership ID", 
+        "Referral Code",
+        "Referred By",
+        "Joined Date", 
+        "Status", 
+        "Is Volunteer", 
+        "Volunteer Skills",
+        "Additional Info",
+        "Social Media - Facebook",
+        "Social Media - Twitter", 
+        "Social Media - Instagram",
+        "Created At",
+        "Updated At"
+      ]
+      
       const csvContent = [
         headers.join(","),
         [
@@ -1506,9 +1592,10 @@ export function MemberManagement({
           `"${member.phone || ''}"`,
           `"${member.mobileNumber || ''}"`,
           `"${member.whatsappNumber || ''}"`,
+          `"${member.isWhatsAppSame ? 'Yes' : 'No'}"`,
           `"${member.address || ''}"`,
-          `"${member.district || ''}"`,
           `"${member.state || ''}"`,
+          `"${member.district || ''}"`,
           `"${member.lokSabha || ''}"`,
           `"${member.vidhanSabha || ''}"`,
           `"${member.ward || ''}"`,
@@ -1519,11 +1606,19 @@ export function MemberManagement({
           `"${member.gender || ''}"`,
           `"${member.memberType || ''}"`,
           `"${member.occupation || ''}"`,
-          `"${member.status || ''}"`,
           `"${member.membershipId || ''}"`,
+          `"${member.referralCode || ''}"`,
+          `"${member.referredBy || ''}"`,
           `"${member.joinedDate ? new Date(member.joinedDate).toLocaleDateString("en-IN") : ''}"`,
+          `"${member.status || ''}"`,
           `"${member.isVolunteer ? "Yes" : "No"}"`,
-          `"${member.volunteerSkills?.join(', ') || ''}"`
+          `"${member.volunteerSkills?.join(', ') || ''}"`,
+          `"${member.additionalInfo || ''}"`,
+          `"${member.socialMedia?.facebook || ''}"`,
+          `"${member.socialMedia?.twitter || ''}"`,
+          `"${member.socialMedia?.instagram || ''}"`,
+          `"${member.createdAt ? new Date(member.createdAt).toLocaleDateString("en-IN") : ''}"`,
+          `"${member.updatedAt ? new Date(member.updatedAt).toLocaleDateString("en-IN") : ''}"`
         ].join(",")
       ].join("\n")
 
@@ -1716,7 +1811,7 @@ export function MemberManagement({
                         View Details
                       </Button>
 
-                      <Button
+                      {/* <Button
                         size="sm"
                         variant="outline"
                         className="flex-1"
@@ -1724,7 +1819,7 @@ export function MemberManagement({
                       >
                         <FileDown className="h-4 w-4 mr-1" />
                         Export
-                      </Button>
+                      </Button> */}
                       
                       {canManageMembers && member.status === "pending" && (
                         <>
@@ -1852,14 +1947,14 @@ export function MemberManagement({
                             View
                           </Button>
 
-                          <Button
+                          {/* <Button
                             size="sm"
                             variant="outline"
                             onClick={() => exportSingleMemberToExcel(member)}
                             title="Export to Excel"
                           >
                             <FileDown className="h-4 w-4" />
-                          </Button>
+                          </Button> */}
                           
                           {canManageMembers && member.status === "pending" && (
                             <>
