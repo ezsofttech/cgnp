@@ -49,14 +49,14 @@ export function HeroSection() {
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
-              <Button
+              {/* <Button
                 asChild
                 variant="outline"
                 size="lg"
                 className="text-lg px-8 py-6 border-blue-600 text-blue-700 hover:bg-blue-50"
               >
                 <Link href="#journey">Our Journey</Link>
-              </Button>
+              </Button> */}
             </div>
           </div>
 

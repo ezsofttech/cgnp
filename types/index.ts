@@ -10,6 +10,8 @@ export interface Leader {
 }
 
 export interface Member {
+  whatsappNumber: string
+  isWhatsAppSame: any
   additionalInfo: ReactNode
   volunteerSkills: boolean
   lokSabha: string

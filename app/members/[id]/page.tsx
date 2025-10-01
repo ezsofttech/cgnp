@@ -3,10 +3,22 @@
 import { useState, useEffect, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Download } from "lucide-react"
+import { ArrowLeft, Download, CheckCircle, XCircle, Clock } from "lucide-react"
 import { Member } from "@/types"
 import html2canvas from "html2canvas"
 import jsPDF from "jspdf"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { Badge } from "@/components/ui/badge"
 
 export default function MemberDetailPage() {
   const params = useParams()
@@ -14,6 +26,7 @@ export default function MemberDetailPage() {
   const [member, setMember] = useState<Member | null>(null)
   const [loading, setLoading] = useState(true)
   const [exporting, setExporting] = useState(false)
+  const [updatingStatus, setUpdatingStatus] = useState(false)
   const pdfRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -35,6 +48,32 @@ export default function MemberDetailPage() {
       console.error("Error fetching member:", error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleStatusUpdate = async (newStatus: string) => {
+    if (!member) return
+
+    try {
+      setUpdatingStatus(true)
+      const response = await fetch(`/api/members/${member._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: newStatus }),
+      })
+
+      if (response.ok) {
+        // Update local state immediately
+        setMember(prev => prev ? { ...prev, status: newStatus } : null)
+        // Optionally refresh the data
+        await fetchMember(member._id)
+      }
+    } catch (error) {
+      console.error("Error updating member status:", error)
+    } finally {
+      setUpdatingStatus(false)
     }
   }
 
@@ -103,6 +142,21 @@ export default function MemberDetailPage() {
            'bg-gray-100 text-gray-800 border border-gray-200'
   }
 
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "active":
+        return <CheckCircle className="h-4 w-4 text-green-600" />
+      case "pending":
+        return <Clock className="h-4 w-4 text-yellow-600" />
+      case "inactive":
+        return <XCircle className="h-4 w-4 text-gray-600" />
+      default:
+        return null
+    }
+  }
+
+  const canManageMembers = true // You can add your permission logic here
+
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -129,7 +183,7 @@ export default function MemberDetailPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-8 gap-4">
         <div className="flex items-center space-x-4">
           <Button
             variant="outline"
@@ -145,15 +199,113 @@ export default function MemberDetailPage() {
             <p className="text-gray-600">Complete information about {member.name}</p>
           </div>
         </div>
-        <Button
-          onClick={exportToPDF}
-          disabled={exporting}
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          <Download className="h-4 w-4" />
-          {exporting ? "Exporting..." : "Export PDF"}
-        </Button>
+        
+        <div className="flex flex-col sm:flex-row gap-3">
+          {/* Status Actions */}
+          {canManageMembers && member.status === "pending" && (
+            <div className="flex gap-2">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button 
+                    size="sm" 
+                    className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
+                    disabled={updatingStatus}
+                  >
+                    <CheckCircle className="h-4 w-4" />
+                    Approve
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Approve Member</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to approve {member.name} as an active member?
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => handleStatusUpdate("active")}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      {updatingStatus ? "Approving..." : "Approve"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-red-600 hover:text-red-700 bg-transparent border-red-200 hover:bg-red-50 flex items-center gap-2"
+                    disabled={updatingStatus}
+                  >
+                    <XCircle className="h-4 w-4" />
+                    Reject
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Reject Member</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to reject {member.name}'s membership application?
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => handleStatusUpdate("inactive")}
+                      className="bg-red-600 hover:bg-red-700"
+                    >
+                      {updatingStatus ? "Rejecting..." : "Reject"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          )}
+
+          <Button
+            onClick={exportToPDF}
+            disabled={exporting}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Download className="h-4 w-4" />
+            {exporting ? "Exporting..." : "Export PDF"}
+          </Button>
+        </div>
+      </div>
+
+      {/* Status Display */}
+      <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div>
+              <p className="text-sm text-gray-600">Current Status</p>
+              <Badge className={`text-sm flex items-center gap-1 ${(member.status)}`}>
+                {getStatusIcon(member.status)}
+                {member.status?.charAt(0).toUpperCase() + member.status?.slice(1)}
+              </Badge>
+            </div>
+            {member.isVolunteer && (
+              <div>
+                <p className="text-sm text-gray-600">Volunteer Status</p>
+                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                  Volunteer
+                </Badge>
+              </div>
+            )}
+          </div>
+          
+          {member.status === "pending" && canManageMembers && (
+            <p className="text-sm text-yellow-600 bg-yellow-50 px-3 py-2 rounded-md">
+              This member is awaiting approval. You can approve or reject their application.
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Content for PDF */}
@@ -162,7 +314,6 @@ export default function MemberDetailPage() {
         <div className="text-center mb-8 border-b pb-6">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Member Information</h1>
           <div className="flex justify-center items-center gap-4">
-            {/* Custom badge for PDF - better rendering */}
             <div className={`pdf-badge inline-flex items-center justify-center px-4 py-2 rounded-full text-sm font-medium min-h-[2rem] ${(member.status)}`}>
               {member.status?.charAt(0).toUpperCase() + member.status?.slice(1)}
             </div>
@@ -174,7 +325,7 @@ export default function MemberDetailPage() {
           </div>
         </div>
 
-        {/* Main Content */}
+        {/* Main Content - Same as before */}
         <div className="space-y-8">
           {/* Personal Information */}
           <section>
@@ -189,10 +340,6 @@ export default function MemberDetailPage() {
                 <p className="text-gray-900 font-mono">{member.membershipId}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-500 mb-1">Date of Birth</label>
-                <p className="text-gray-900">{formatDate(member.dateOfBirth)}</p>
-              </div>
-              <div>
                 <label className="block text-sm font-medium text-gray-500 mb-1">Age</label>
                 <p className="text-gray-900">{member.age || 'Not provided'}</p>
               </div>
@@ -203,10 +350,6 @@ export default function MemberDetailPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-500 mb-1">Member Type</label>
                 <p className="text-gray-900">{member.memberType || 'Not provided'}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-500 mb-1">Occupation</label>
-                <p className="text-gray-900">{member.occupation || 'Not provided'}</p>
               </div>
             </div>
           </section>
@@ -229,10 +372,6 @@ export default function MemberDetailPage() {
                   {member.whatsappNumber || (member.isWhatsAppSame ? 'Same as mobile' : 'Not provided')}
                 </p>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-500 mb-1">Phone</label>
-                <p className="text-gray-900">{member.phone || 'Not provided'}</p>
-              </div>
             </div>
           </section>
 
@@ -246,20 +385,12 @@ export default function MemberDetailPage() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">State</label>
-                  <p className="text-gray-900">{member.state || 'Not provided'}</p>
-                </div>
-                <div>
                   <label className="block text-sm font-medium text-gray-500 mb-1">District</label>
                   <p className="text-gray-900">{member.district || 'Not provided'}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-500 mb-1">Tehsil</label>
                   <p className="text-gray-900">{member.tehsil || 'Not provided'}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Pincode</label>
-                  <p className="text-gray-900">{member.pincode || 'Not provided'}</p>
                 </div>
               </div>
             </div>
