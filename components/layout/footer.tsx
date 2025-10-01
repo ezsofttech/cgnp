@@ -60,13 +60,13 @@ export function Footer() {
           <div className="space-y-4">
             <h3 className="font-semibold text-white">Get Involved</h3>
             <div className="space-y-2 text-sm">
-              <Link href="/volunteer" className="block text-blue-200 hover:text-white transition-colors">
+              <Link href="#" className="block text-blue-200 hover:text-white transition-colors">
                 Volunteer
               </Link>
-              <Link href="/donate" className="block text-blue-200 hover:text-white transition-colors">
+              <Link href="#" className="block text-blue-200 hover:text-white transition-colors">
                 Donate
               </Link>
-              <Link href="/events" className="block text-blue-200 hover:text-white transition-colors">
+              <Link href="#" className="block text-blue-200 hover:text-white transition-colors">
                 Events
               </Link>
               <Link href="/leader/login" className="block text-blue-200 hover:text-white transition-colors">
