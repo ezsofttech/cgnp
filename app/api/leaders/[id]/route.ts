@@ -70,32 +70,34 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    await dbConnect()
+    await dbConnect();
 
-    const auth = await authenticateRequest(request)
+    const auth = await authenticateRequest(request);
 
     if (!auth) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Check if user has admin permissions
-    const currentLeader = await Leader.findById(auth.leaderId)
+    const currentLeader = await Leader.findById(auth.leaderId);
     if (!currentLeader?.permissions.includes("admin_access")) {
-      return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 })
+      return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
     }
 
-    const leader = await Leader.findByIdAndUpdate(params.id, { isActive: false }, { new: true }).select("-password")
+    // 🧹 Permanently delete the leader from DB
+    const leader = await Leader.findByIdAndDelete(params.id);
 
     if (!leader) {
-      return NextResponse.json({ error: "Leader not found" }, { status: 404 })
+      return NextResponse.json({ error: "Leader not found" }, { status: 404 });
     }
 
     return NextResponse.json({
-      message: "Leader deactivated successfully",
-      leader,
-    })
+      message: "Leader deleted successfully",
+      deletedLeaderId: params.id,
+    });
   } catch (error) {
-    console.error("Delete leader error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error("Delete leader error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+

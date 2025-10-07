@@ -10,7 +10,14 @@ const LeaderCreateSchema = z.object({
   name: z.string().min(2),
   email: z.string().email(),
   password: z.string().min(8),
-  role: z.enum(["district_convenor", "state_convenor", "national_convenor"]),
+    role: z.enum([
+    "national_convenor",
+    "deputy_convenor",
+    "policy_head",
+    "organization_secretary",
+    "state_convenor",
+    "district_convenor"
+  ]),
   position: z.string().optional(),
   phone:z.string(),
   referralCode: z.string().min(4).optional(),
