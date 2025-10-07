@@ -135,7 +135,7 @@ export function LeaderForm({ leader, onSuccess }: LeaderFormProps) {
     { id: "view_analytics", label: "View Analytics" },
     { id: "manage_events", label: "Manage Events" },
     { id: "manage_donations", label: "Manage Donations" },
-    { id: "admin_access", label: "Admin Access" },
+    // { id: "admin_access", label: "Admin Access" },
   ]
 
   const handlePermissionChange = (permissionId: string, checked: boolean) => {
