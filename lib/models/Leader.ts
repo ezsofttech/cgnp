@@ -13,13 +13,20 @@ export interface ILeader extends Document {
   referralCode: string
   joinedDate: Date
   isActive: boolean
-  role:
-    | "national_convenor"
-    | "deputy_convenor"
-    | "policy_head"
-    | "organization_secretary"
-    | "state_convenor"
-    | "district_convenor"
+role: {
+  type: String,
+  enum: [
+    "party_admin", // ✅ Add this new role
+    "national_convenor",
+    "deputy_convenor",
+    "policy_head",
+    "organization_secretary",
+    "state_convenor",
+    "district_convenor",
+  ],
+  required: [true, "Role is required"],
+},
+
   permissions: string[]
   createdAt: Date
   updatedAt: Date

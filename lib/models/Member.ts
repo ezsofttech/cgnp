@@ -207,7 +207,7 @@ MemberSchema.pre("save", async function (next) {
   if (!this.membershipId) {
     const year = new Date().getFullYear()
     const count = await mongoose.models.Member.countDocuments()
-    this.membershipId = `AAP${year}${String(count + 1).padStart(6, "0")}`
+    this.membershipId = `CGNP${year}${String(count + 1).padStart(6, "0")}`
   }
 
   // Generate referral code if not provided

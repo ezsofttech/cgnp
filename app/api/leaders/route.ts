@@ -29,21 +29,50 @@ export async function GET(request: NextRequest) {
   try {
     await dbConnect();
 
-    // Parse query parameters with validation
+    // ✅ Authenticate user
+    const auth = await authenticateRequest(request);
+    if (!auth) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const currentLeader = await Leader.findById(auth.leaderId).select(
+      "-password -__v"
+    );
+    if (!currentLeader) {
+      return NextResponse.json(
+        { success: false, error: "Leader not found" },
+        { status: 404 }
+      );
+    }
+
+    // Pagination
     const { searchParams } = new URL(request.url);
     const page = Math.max(1, Number.parseInt(searchParams.get("page") || "1"));
-    const limit = Math.min(50, Math.max(1, Number.parseInt(searchParams.get("limit") || "10")));
+    const limit = Math.min(
+      50,
+      Math.max(1, Number.parseInt(searchParams.get("limit") || "10"))
+    );
     const skip = (page - 1) * limit;
 
-    // Get active leaders with pagination
+    let query = {};
+
+    // ✅ Role-based visibility
+    if (currentLeader.role !== "party_admin") {
+      query = { _id: currentLeader._id }; // Only their own details
+    }
+
+    // Fetch data
     const [leaders, total] = await Promise.all([
-      Leader.find()
+      Leader.find(query)
         .select("-password -__v")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .lean(),
-      Leader.countDocuments({}),
+      Leader.countDocuments(query),
     ]);
 
     return NextResponse.json({
@@ -66,6 +95,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
+
 export async function POST(request: NextRequest) {
   try {
     await dbConnect();
@@ -79,14 +109,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Authorization check - only admins can create leaders
-    const currentLeader = await Leader.findById(auth.leaderId);
-    if (!currentLeader?.permissions?.includes("admin_access")) {
-      return NextResponse.json(
-        { success: false, error: "Insufficient permissions" },
-        { status: 403 }
-      );
-    }
+// Authorization check - only party_admin can create leaders
+const currentLeader = await Leader.findById(auth.leaderId);
+if (currentLeader?.role !== "party_admin") {
+  return NextResponse.json(
+    { success: false, error: "Only Party Admin can create leaders" },
+    { status: 403 }
+  );
+}
 
     
 

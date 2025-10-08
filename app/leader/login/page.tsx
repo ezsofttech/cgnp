@@ -20,13 +20,13 @@ export default function LeaderLoginPage() {
             <p className="text-xl text-aap-blue-100 max-w-3xl mx-auto leading-relaxed">
              Step into your leader hub to organize your team, monitor progress, and help us build a more transparent government.
             </p>
-            <div className="flex flex-wrap justify-center items-center gap-4 text-lg font-medium">
+            {/* <div className="flex flex-wrap justify-center items-center gap-4 text-lg font-medium">
               <span className="text-aap-yellow-400">बेशर्मिकत</span>
               <span className="text-aap-blue-300">|</span>
               <span className="text-aap-yellow-400">ईमानदारी</span>
               <span className="text-aap-blue-300">|</span>
               <span className="text-aap-yellow-400">इंसानियत</span>
-            </div>
+            </div> */}
           </div>
 
           <LeaderLoginForm />
