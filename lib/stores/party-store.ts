@@ -1,5 +1,23 @@
 import { create } from "zustand"
 
+// ✅ Utility to always include auth token from cookies
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  // Get token from cookies
+  const token = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith("auth-token="))
+    ?.split("=")[1]
+
+  const headers = {
+    ...(options.headers || {}),
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  }
+
+  const res = await fetch(url, { ...options, headers })
+  return res
+}
+
 interface Leader {
   _id: string
   name: string
@@ -9,7 +27,7 @@ interface Leader {
   image?: string
   phone: string
   address: string
-  referralCode: string
+  refferalCode: string
   joinedDate: string
   isActive: boolean
   role: string
@@ -63,8 +81,8 @@ interface PartyInfo {
 }
 
 interface ReferralLinkResponse {
-  referralLink: string
-  referralCode: string
+  refferalLink: string
+  refferalCode: string
   leaderName: string
   leaderPosition: string
   expiresAt?: string
@@ -76,18 +94,18 @@ interface PartyState {
   members: Member[]
   partyInfo: PartyInfo | null
   isLoading: boolean
-  referralLinks: Map<string, ReferralLinkResponse> // Cache for referral links
+  refferalLinks: Map<string, ReferralLinkResponse>
 
   // Actions
   setLoading: (loading: boolean) => void
   fetchLeaders: () => Promise<void>
-  fetchMembers: (referralCode?: string) => Promise<void>
+  fetchMembers: (refferalCode?: string) => Promise<void>
   fetchPartyInfo: () => Promise<void>
   addMember: (memberData: any) => Promise<{ success: boolean; error?: string }>
-  generateReferralLink: (referralCode: string) => string
-  getReferralLink: (referralCode: string, forceRefresh?: boolean) => Promise<ReferralLinkResponse>
+  generateReferralLink: (refferalCode: string) => string
+  getReferralLink: (refferalCode: string, forceRefresh?: boolean) => Promise<ReferralLinkResponse>
   getReferralLinkByLeaderId: (leaderId: string) => Promise<ReferralLinkResponse>
-  validateReferralCode: (referralCode: string) => Promise<{ valid: boolean; leader?: Leader }>
+  validateReferralCode: (refferalCode: string) => Promise<{ valid: boolean; leader?: Leader }>
 }
 
 export const usePartyStore = create<PartyState>((set, get) => ({
@@ -95,19 +113,20 @@ export const usePartyStore = create<PartyState>((set, get) => ({
   members: [],
   partyInfo: null,
   isLoading: false,
-  referralLinks: new Map(),
+  refferalLinks: new Map(),
 
   setLoading: (isLoading) => set({ isLoading }),
 
   fetchLeaders: async () => {
     set({ isLoading: true })
     try {
-      const response = await fetch("/api/leaders")
+      const response = await authFetch("/api/leaders")
       if (response.ok) {
         const data = await response.json()
         set({ leaders: data.leaders })
+      } else {
+        console.error("Failed to fetch leaders:", response.status)
       }
-      console.log("Fetched leaders:", get().leaders);
     } catch (error) {
       console.error("Error fetching leaders:", error)
     } finally {
@@ -115,62 +134,39 @@ export const usePartyStore = create<PartyState>((set, get) => ({
     }
   },
 
-fetchMembers: async () => {
-  set({ isLoading: true })
-  try {
-    // Adjust this key to whatever your persisted store key is
-    const storedData = localStorage.getItem("auth-storage")
-    console.log("Stored auth data:", storedData)
-
-    let leader = null
-    if (storedData) {
-      console.log("Parsing stored auth data",storedData )
-      const parsed = JSON.parse(storedData)
-      console.log("Parsed auth data:", parsed)
- leader = parsed.state.leader
-   console.log("Parsed leader from storage:", leader)     
-      // const state = parsed.state ? JSON.parse(parsed.state) : parsed
-     
-    
-    }
-
-    console.log("Leader info from localStorage:", leader)
-
-    let url = "/api/members" // default for party admin
-    if (leader) {
-      const role = leader.role
-      const id = leader.id
-console.log("Leader role and ID:", role, id)
-      if (role !== "party_admin") {
-        url = `/api/members/refferal/${id}`  // fix spelling
+  fetchMembers: async () => {
+    set({ isLoading: true })
+    try {
+      const storedData = localStorage.getItem("auth-storage")
+      let leader = null
+      if (storedData) {
+        const parsed = JSON.parse(storedData)
+        leader = parsed.state?.leader
       }
+
+      let url = "/api/members"
+      if (leader && leader.role !== "party_admin") {
+        url = `/api/members/refferal/${leader.id}`
+      }
+
+      const response = await authFetch(url)
+
+      if (response.ok) {
+        const data = await response.json()
+        set({ members: data.member })
+      } else {
+        console.error("❌ Failed to fetch members:", response.status)
+      }
+    } catch (error) {
+      console.error("🚨 Error fetching members:", error)
+    } finally {
+      set({ isLoading: false })
     }
-
-    console.log("📡 Fetching members from:", url)
-
-    const response = await fetch(url)
-
-    if (response.ok) {
-          const data = await response.json(); // Clone response to read it twice
-
-      set({ members: data.member })
-    } else {
-      console.error("❌ Failed to fetch members:", response.status)
-    }
-  } catch (error) {
-    console.error("🚨 Error fetching members:", error)
-  } finally {
-    set({ isLoading: false })
-  }
-},
-
-
+  },
 
   fetchPartyInfo: async () => {
     try {
-      const response = await fetch("/api/party-info")
-      console.log("Fetching party info from API:", response);
-      
+      const response = await authFetch("/api/party-info")
       if (response.ok) {
         const data = await response.json()
         set({ partyInfo: data.partyInfo })
@@ -182,141 +178,92 @@ console.log("Leader role and ID:", role, id)
 
   addMember: async (memberData) => {
     try {
-      const response = await fetch("/api/members", {
+      const response = await authFetch("/api/members", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify(memberData),
       })
 
       const data = await response.json()
-
       if (response.ok) {
-        // Refresh members list
-        const { fetchMembers } = get()
-        await fetchMembers(memberData.referredBy)
+        await get().fetchMembers(memberData.referredBy)
         return { success: true }
       } else {
         return { success: false, error: data.error }
       }
-    } catch (error) {
+    } catch {
       return { success: false, error: "Network error" }
     }
   },
 
-  generateReferralLink: (referralCode: string) => {
+  generateReferralLink: (refferalCode: string) => {
     if (typeof window !== "undefined") {
-      return `${window.location.origin}/join?ref=${referralCode}`
+      return `${window.location.origin}/join?ref=${refferalCode}`
     }
-    return `https://your-domain.com/join?ref=${referralCode}`
+    return `https://your-domain.com/join?ref=${refferalCode}`
   },
 
-  // GET method to fetch referral link with additional data
-  getReferralLink: async (referralCode: string, forceRefresh: boolean = false): Promise<ReferralLinkResponse> => {
-    const { referralLinks, generateReferralLink, leaders } = get()
-
-    // Check cache first if not forcing refresh
-    if (!forceRefresh && referralLinks.has(referralCode)) {
-      return referralLinks.get(referralCode)!
+  getReferralLink: async (refferalCode, forceRefresh = false) => {
+    const { refferalLinks, generateReferralLink, leaders } = get()
+    if (!forceRefresh && refferalLinks.has(refferalCode)) {
+      return refferalLinks.get(refferalCode)!
     }
 
     try {
-      // Fetch leader details for this referral code
-      const response = await fetch(`/api/leaders/referral/${referralCode}`)
-      
+      const response = await authFetch(`/api/leaders/refferal/${refferalCode}`)
       if (response.ok) {
         const data = await response.json()
-        
-        const referralLinkData: ReferralLinkResponse = {
-          referralLink: generateReferralLink(referralCode),
-          referralCode: referralCode,
+        const refferalLinkData: ReferralLinkResponse = {
+          refferalLink: generateReferralLink(refferalCode),
+          refferalCode,
           leaderName: data.leader?.name || "Unknown Leader",
           leaderPosition: data.leader?.position || "Leader",
           expiresAt: data.expiresAt,
-          usageCount: data.usageCount
+          usageCount: data.usageCount,
         }
 
-        // Update cache
-        const newReferralLinks = new Map(referralLinks)
-        newReferralLinks.set(referralCode, referralLinkData)
-        set({ referralLinks: newReferralLinks })
+        const newMap = new Map(refferalLinks)
+        newMap.set(refferalCode, refferalLinkData)
+        set({ refferalLinks: newMap })
 
-        return referralLinkData
+        return refferalLinkData
       } else {
-        // Fallback if API fails
-        const leader = leaders.find(l => l.referralCode === referralCode)
-        const referralLinkData: ReferralLinkResponse = {
-          referralLink: generateReferralLink(referralCode),
-          referralCode: referralCode,
-          leaderName: leader?.name || "Unknown Leader",
-          leaderPosition: leader?.position || "Leader"
-        }
-
-        // Update cache with fallback data
-        const newReferralLinks = new Map(referralLinks)
-        newReferralLinks.set(referralCode, referralLinkData)
-        set({ referralLinks: newReferralLinks })
-
-        return referralLinkData
+        throw new Error("Failed to fetch refferal link")
       }
     } catch (error) {
-      console.error("Error fetching referral link:", error)
-      
-      // Fallback to basic generation
-      const leader = leaders.find(l => l.referralCode === referralCode)
-      const referralLinkData: ReferralLinkResponse = {
-        referralLink: generateReferralLink(referralCode),
-        referralCode: referralCode,
+      console.error("Error fetching refferal link:", error)
+      const leader = leaders.find((l) => l.refferalCode === refferalCode)
+      return {
+        refferalLink: generateReferralLink(refferalCode),
+        refferalCode,
         leaderName: leader?.name || "Unknown Leader",
-        leaderPosition: leader?.position || "Leader"
+        leaderPosition: leader?.position || "Leader",
       }
-
-      return referralLinkData
     }
   },
 
-  // GET method to fetch referral link by leader ID
-  getReferralLinkByLeaderId: async (leaderId: string): Promise<ReferralLinkResponse> => {
+  getReferralLinkByLeaderId: async (leaderId: string) => {
     const { leaders, getReferralLink } = get()
-    
-    const leader = leaders.find(l => l._id === leaderId)
-    if (!leader) {
-      throw new Error("Leader not found")
-    }
-
-    return await getReferralLink(leader.referralCode)
+    const leader = leaders.find((l) => l._id === leaderId)
+    if (!leader) throw new Error("Leader not found")
+    return await getReferralLink(leader.refferalCode)
   },
 
-  // GET method to validate a referral code
-  validateReferralCode: async (referralCode: string): Promise<{ valid: boolean; leader?: Leader }> => {
+  validateReferralCode: async (refferalCode) => {
     try {
-      const response = await fetch(`/api/leaders/referral/${referralCode}/validate`)
-      
+      const response = await authFetch(`/api/leaders/refferal/${refferalCode}/validate`)
       if (response.ok) {
         const data = await response.json()
-        return {
-          valid: data.valid,
-          leader: data.leader
-        }
+        return { valid: data.valid, leader: data.leader }
       } else {
-        // Fallback validation
         const { leaders } = get()
-        const leader = leaders.find(l => l.referralCode === referralCode && l.isActive)
-        return {
-          valid: !!leader,
-          leader: leader
-        }
+        const leader = leaders.find((l) => l.refferalCode === refferalCode && l.isActive)
+        return { valid: !!leader, leader }
       }
     } catch (error) {
-      console.error("Error validating referral code:", error)
-      // Fallback validation
+      console.error("Error validating refferal code:", error)
       const { leaders } = get()
-      const leader = leaders.find(l => l.referralCode === referralCode && l.isActive)
-      return {
-        valid: !!leader,
-        leader: leader
-      }
+      const leader = leaders.find((l) => l.refferalCode === refferalCode && l.isActive)
+      return { valid: !!leader, leader }
     }
-  }
+  },
 }))

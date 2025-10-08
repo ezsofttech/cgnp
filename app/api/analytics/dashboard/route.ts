@@ -2,73 +2,114 @@ import { type NextRequest, NextResponse } from "next/server"
 import dbConnect from "@/lib/mongodb"
 import Leader from "@/lib/models/Leader"
 import Member from "@/lib/models/Member"
-import { authenticateRequest } from "@/lib/auth"
+import jwt from "jsonwebtoken"
+
+const JWT_SECRET = process.env.JWT_SECRET
+if (!JWT_SECRET || JWT_SECRET.length < 32) {
+  console.error("FATAL: JWT_SECRET must be at least 32 characters long")
+  process.exit(1)
+}
 
 export async function GET(request: NextRequest) {
   try {
     await dbConnect()
 
-    const auth = await authenticateRequest(request)
-    if (!auth) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    // 🧩 Step 1: Extract token from cookies or headers
+    const token =
+      request.cookies.get("auth-token")?.value ||
+      request.headers.get("authorization")?.replace("Bearer ", "")
+
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized: No token provided" }, { status: 401 })
     }
 
-    // Check if user has analytics permission
-    const currentLeader = await Leader.findById(auth.leaderId)
-    if (!currentLeader?.permissions.includes("view_analytics")) {
+    // 🧩 Step 2: Decode the token
+    let decoded: any
+    try {
+      decoded = jwt.verify(token, JWT_SECRET||"R4jP7nYjLwVg2Q0XH2xF0m3pPnlZ5a6yYF8vHtR8b+vOaL1+5KwTgRztUjJZr1Y9")
+    } catch (err) {
+      return NextResponse.json({ error: "Invalid or expired token" }, { status: 401 })
+    }
+
+    const leaderId = decoded.leaderId
+    const currentLeader = await Leader.findById(leaderId)
+    if (!currentLeader) {
+      return NextResponse.json({ error: "Leader not found" }, { status: 404 })
+    }
+
+    // 🧩 Step 3: Verify permission
+    if (!currentLeader.permissions.includes("view_analytics")) {
       return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 })
     }
 
+    const { role } = currentLeader
+
+    // 🧩 Step 4: Extract range filter
     const { searchParams } = new URL(request.url)
     const range = Number.parseInt(searchParams.get("range") || "30")
 
     const dateFrom = new Date()
     dateFrom.setDate(dateFrom.getDate() - range)
 
-    // Get total counts
-    const totalMembers = await Member.countDocuments()
-    const activeMembers = await Member.countDocuments({ status: "active"  })
-    const pendingMembers = await Member.countDocuments({ status: "pending"})
-    const totalLeaders = await Leader.countDocuments()
+    // 🧩 Step 5: Build base query based on role
+    const memberQuery: any = {}
+    if (role !== "party_admin") {
+      memberQuery.referredBy = leaderId
+    }
 
-    // Calculate monthly growth
+    // 🧩 Step 6: Calculate analytics data
+    const totalMembers = await Member.countDocuments(memberQuery)
+    const activeMembers = await Member.countDocuments({ ...memberQuery, status: "active" })
+    const pendingMembers = await Member.countDocuments({ ...memberQuery, status: "pending" })
+    const totalLeaders = role === "party_admin" ? await Leader.countDocuments() : 1
+
+    // Monthly growth
     const lastMonth = new Date()
     lastMonth.setMonth(lastMonth.getMonth() - 1)
+
     const newMembersThisMonth = await Member.countDocuments({
+      ...memberQuery,
       joinedDate: { $gte: lastMonth },
     })
+
     const totalMembersLastMonth = totalMembers - newMembersThisMonth
     const monthlyGrowth =
-      totalMembersLastMonth > 0 ? Math.round((newMembersThisMonth / totalMembersLastMonth) * 100) : 0
+      totalMembersLastMonth > 0
+        ? Math.round((newMembersThisMonth / totalMembersLastMonth) * 100)
+        : 0
 
-    // State distribution
+    // State distribution (top 10)
     const stateDistribution = await Member.aggregate([
+      { $match: memberQuery },
       { $group: { _id: "$state", count: { $sum: 1 } } },
       { $sort: { count: -1 } },
       { $limit: 10 },
       { $project: { state: "$_id", count: 1, _id: 0 } },
     ])
 
-    // Top referrers
-    const topReferrers = await Member.aggregate([
-      { $match: { referredBy: { $exists: true, $ne: null } } },
-      { $group: { _id: "$referredBy", count: { $sum: 1 } } },
-      { $sort: { count: -1 } },
-      { $limit: 10 },
-    ])
+    // Top referrers (only for party_admin)
+// Top referrers (only for party_admin)
+let topReferrersWithNames: { name: string; referrals: number }[] = []
 
-    // Get leader names for top referrers
-    const referrerCodes = topReferrers.map((r) => r._id)
-    const referrerLeaders = await Leader.find({ referralCode: { $in: referrerCodes } }).select("name referralCode")
+    if (role === "party_admin") {
+      const topReferrers = await Member.aggregate([
+        { $match: { referredBy: { $exists: true, $ne: null } } },
+        { $group: { _id: "$referredBy", count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 10 },
+      ])
 
-    const topReferrersWithNames = topReferrers.map((referrer) => {
-      const leader = referrerLeaders.find((l) => l.referralCode === referrer._id)
-      return {
-        name: leader?.name || "Unknown",
-        code: referrer._id,
-        referrals: referrer.count,
-      }
-    })
+      const referrerIds = topReferrers.map((r) => r._id)
+      const referrerLeaders = await Leader.find({ _id: { $in: referrerIds } }).select("name referralCode")
+
+      topReferrersWithNames = topReferrers.map((ref) => {
+        const leader = referrerLeaders.find((l) => l._id.toString() === ref._id.toString())
+        return {
+          name: leader?.name || "Unknown",
+          referrals: ref.count,
+        }
+      })
+    }
 
     // Membership trends (last 6 months)
     const membershipTrends = []
@@ -79,12 +120,16 @@ export async function GET(request: NextRequest) {
       const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0)
 
       const membersCount = await Member.countDocuments({
+        ...memberQuery,
         joinedDate: { $gte: monthStart, $lte: monthEnd },
       })
 
-      const leadersCount = await Leader.countDocuments({
-        joinedDate: { $gte: monthStart, $lte: monthEnd },
-      })
+      const leadersCount =
+        role === "party_admin"
+          ? await Leader.countDocuments({
+              joinedDate: { $gte: monthStart, $lte: monthEnd },
+            })
+          : 0
 
       membershipTrends.push({
         month: date.toLocaleDateString("en-US", { month: "short", year: "numeric" }),
@@ -93,16 +138,16 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Recent activity (mock data for now - in real app, you'd have an activity log)
-    const recentMembers = await Member.find()
+    // Recent activity
+    const recentMembers = await Member.find(memberQuery)
       .sort({ joinedDate: -1 })
       .limit(5)
       .select("name joinedDate")
 
-    const recentLeaders = await Leader.find()
-      .sort({ joinedDate: -1 })
-      .limit(3)
-      .select("name joinedDate")
+    const recentLeaders =
+      role === "party_admin"
+        ? await Leader.find().sort({ joinedDate: -1 }).limit(3).select("name joinedDate")
+        : []
 
     const recentActivity = [
       ...recentMembers.map((member) => ({
@@ -117,6 +162,7 @@ export async function GET(request: NextRequest) {
       })),
     ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
 
+    // 🧩 Step 7: Response
     const analyticsData = {
       totalMembers,
       activeMembers,

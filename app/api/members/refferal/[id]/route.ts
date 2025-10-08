@@ -6,7 +6,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   try {
     await dbConnect()
 
-    const member = await Member.find({referredBy: params.id}).populate("referredBy", "name email referralCode")
+    const member = await Member.find({referredBy: (await params).id}).populate("referredBy", "name email referralCode")
 
     if (!member) {
       return NextResponse.json({ error: "Member not found" }, { status: 404 })
