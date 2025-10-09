@@ -36,9 +36,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!leader.isActive) {
-      return NextResponse.json({ error: "In Active Leader " }, { status: 401 });
-    }
+    // if (!leader.isActive) {
+    //   return NextResponse.json({ error: "In Active Leader " }, { status: 401 });
+    // }
 
     // Check password
     const isPasswordValid = await bcrypt.compare(password, leader.password);

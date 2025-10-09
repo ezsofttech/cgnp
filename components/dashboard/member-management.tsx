@@ -111,119 +111,114 @@
 //     setPagination(prev => ({ ...prev, page: 1 }))
 //   }
 
-// const handleViewMember = (memberId: string) => {
-//   window.open(`/members/${memberId}`, "_blank", "noopener,noreferrer")
-// }
-
-
-// const exportToExcel = async () => {
-//   try {
-//     setExportLoading(true)
-    
-//     // Use the same API but with export parameter
-//     const params = new URLSearchParams({
-//       export: "excel", // This tells the API to return all data
-//       ...(statusFilter !== "all" && { status: statusFilter }),
-//       ...(searchTerm && { search: searchTerm }),
-//     })
-
-//     const response = await fetch(`/api/members?${params}`)
-    
-//     if (!response.ok) {
-//       throw new Error('Failed to export members')
-//     }
-
-//     const data = await response.json()
-
-//     if (data.member && data.member.length > 0) {
-//       // Create CSV content with all fields
-//       const headers = [
-//         "Name", 
-//         "Email", 
-//         "Mobile Number", 
-//         "WhatsApp Number", 
-//         "Is WhatsApp Same",
-//         "Address", 
-//         "District", 
-//         "State",
-//         "Lok Sabha Constituency", 
-//         "Vidhan Sabha Constituency", 
-//         "Ward", 
-//         "Tehsil", 
-//         "Pincode",
-//         "Age", 
-//         "Gender", 
-//         "Member Type", 
-//         "Occupation", 
-//         "Membership ID", 
-//         "Referral Code",
-//         "Referred By",
-//         "Referred By Name",
-//         "Joined Date", 
-//         "Status", 
-//         "Is Volunteer", 
-//         "Volunteer Skills",
-//         "Additional Info",
-//         "Created At",
-//         "Updated At"
-//       ]
-      
-//       const csvContent = [
-//         headers.join(","),
-//         ...data.members.map((member: Member) => [
-//           `"${member.name || ''}"`,
-//           `"${member.email || ''}"`,
-//           `"${member.mobileNumber || ''}"`,
-//           `"${member.whatsappNumber || ''}"`,
-//           `"${member.isWhatsAppSame ? 'Yes' : 'No'}"`,
-//           `"${(member.address || '').replace(/"/g, '""')}"`,
-//           `"${member.district || ''}"`,
-//           `"${member.state || ''}"`,
-//           `"${member.lokSabha || ''}"`,
-//           `"${member.vidhanSabha || ''}"`,
-//           `"${member.ward || ''}"`,
-//           `"${member.tehsil || ''}"`,
-//           `"${member.pincode || ''}"`,
-//           `"${member.age || ''}"`,
-//           `"${member.gender || ''}"`,
-//           `"${member.memberType || ''}"`,
-//           `"${member.occupation || ''}"`,
-//           `"${member.membershipId || ''}"`,
-//           `"${member.referralCode || ''}"`,
-//           `"${member.referredBy || ''}"`,
-//           `"${member.referredBy?.name || ''}"`, // Referred by leader name
-//           `"${member.joinedDate ? new Date(member.joinedDate).toLocaleDateString("en-IN") : ''}"`,
-//           `"${member.status || ''}"`,
-//           `"${member.isVolunteer ? "Yes" : "No"}"`,
-//           `"${(member.volunteerSkills?.join(', ') || '').replace(/"/g, '""')}"`,
-//           `"${(member.additionalInfo || '').replace(/"/g, '""')}"`,
-//           `"${member.createdAt ? new Date(member.createdAt).toLocaleDateString("en-IN") : ''}"`,
-//           `"${member.updatedAt ? new Date(member.updatedAt).toLocaleDateString("en-IN") : ''}"`
-//         ].join(","))
-//       ].join("\n")
-
-//       // Create and download file
-//       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-//       const link = document.createElement("a")
-//       const url = URL.createObjectURL(blob)
-//       link.setAttribute("href", url)
-//       link.setAttribute("download", `members-export-${new Date().toISOString().split('T')[0]}.csv`)
-//       link.style.visibility = "hidden"
-//       document.body.appendChild(link)
-//       link.click()
-//       document.body.removeChild(link)
-      
-//       console.log(`Exported ${data.members.length} members successfully`)
-//     } else {
-//       alert('No data to export')
-//     }
-//   } catch (error) {
-//     console.error("Error exporting members:", error)
-//     alert('Failed to export members. Please try again.')
-//   } finally {
-//     setExportLoading(false)
+//   const handleViewMember = (memberId: string) => {
+//     window.open(`/members/${memberId}`, "_blank", "noopener,noreferrer")
 //   }
-// }
+
+//   const exportAllMembers = async () => {
+//     try {
+//       setExportLoading(true)
+      
+//       // Build query parameters for export
+//       const params = new URLSearchParams({
+//         export: "all",
+//         ...(statusFilter !== "all" && { status: statusFilter }),
+//         ...(searchTerm && { search: searchTerm }),
+//       })
+
+//       const response = await fetch(`/api/members?${params}`)
+//       const data = await response.json()
+
+//       if (response.ok && data.members) {
+//         // Create CSV content with all fields
+//         const headers = [
+//           "Name", 
+//           "Email", 
+//           "Mobile Number", 
+//           "WhatsApp Number", 
+//           "Is WhatsApp Same",
+//           "Address", 
+//           "District", 
+//           "Lok Sabha Constituency", 
+//           "Vidhan Sabha Constituency", 
+//           "Ward", 
+//           "Tehsil", 
+//           "Age", 
+//           "Gender", 
+//           "Member Type", 
+//           "Occupation", 
+//           "Membership ID", 
+//           "Referral Code",
+//           "Referred By",
+//           "Joined Date", 
+//           "Status", 
+//           "Is Volunteer", 
+//           "Volunteer Skills",
+//           "Additional Info",
+//           "Social Media - Facebook",
+//           "Social Media - Twitter", 
+//           "Social Media - Instagram",
+//           "Created At",
+//           "Updated At"
+//         ]
+        
+//         const csvContent = [
+//           headers.join(","),
+//           ...data.members.map((member: Member) => [
+//             `"${member.name || ''}"`,
+//             `"${member.email || ''}"`,
+//             `"${member.mobileNumber || ''}"`,
+//             `"${member.whatsappNumber || ''}"`,
+//             `"${member.isWhatsAppSame ? 'Yes' : 'No'}"`,
+//             `"${(member.address || '').replace(/"/g, '""')}"`,
+//             `"${member.district || ''}"`,
+//             `"${member.lokSabha || ''}"`,
+//             `"${member.vidhanSabha || ''}"`,
+//             `"${member.ward || ''}"`,
+//             `"${member.tehsil || ''}"`,
+//             `"${member.age || ''}"`,
+//             `"${member.gender || ''}"`,
+//             `"${member.memberType || ''}"`,
+//             `"${member.occupation || ''}"`,
+//             `"${member.membershipId || ''}"`,
+//             `"${member.referralCode || ''}"`,
+//             `"${member.referredBy ? (typeof member.referredBy === 'object' ? member.referredBy.name : member.referredBy) : ''}"`,
+//             `"${member.joinedDate ? new Date(member.joinedDate).toLocaleDateString("en-IN") : ''}"`,
+//             `"${member.status || ''}"`,
+//             `"${member.isVolunteer ? "Yes" : "No"}"`,
+//             `"${member.volunteerSkills?.join(', ') || ''}"`,
+//             `"${(member.additionalInfo || '').replace(/"/g, '""')}"`,
+//             `"${member.socialMedia?.facebook || ''}"`,
+//             `"${member.socialMedia?.twitter || ''}"`,
+//             `"${member.socialMedia?.instagram || ''}"`,
+//             `"${member.createdAt ? new Date(member.createdAt).toLocaleDateString("en-IN") : ''}"`,
+//             `"${member.updatedAt ? new Date(member.updatedAt).toLocaleDateString("en-IN") : ''}"`
+//           ].join(","))
+//         ].join("\n")
+
+//         // Create and download file
+//         const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+//         const link = document.createElement("a")
+//         const url = URL.createObjectURL(blob)
+//         link.setAttribute("href", url)
+//         link.setAttribute("download", `all-members-${new Date().toISOString().split('T')[0]}.csv`)
+//         link.style.visibility = "hidden"
+//         document.body.appendChild(link)
+//         link.click()
+//         document.body.removeChild(link)
+        
+//         // Show success message
+ 
+//       } else {
+//         throw new Error("Failed to fetch members for export")
+//       }
+//     } catch (error) {
+//       console.error("Error exporting all members:", error)
+
+//     } finally {
+//       setExportLoading(false)
+//     }
+//   }
 
 //   const exportSingleMemberToExcel = async (member: Member) => {
 //     try {
@@ -231,19 +226,15 @@
 //       const headers = [
 //         "Name", 
 //         "Email", 
-//         // "Phone", 
 //         "Mobile Number", 
 //         "WhatsApp Number", 
 //         "Is WhatsApp Same",
 //         "Address", 
-//         // "State", 
 //         "District", 
 //         "Lok Sabha Constituency", 
 //         "Vidhan Sabha Constituency", 
 //         "Ward", 
 //         "Tehsil", 
-//         // "Pincode", 
-//         // "Date of Birth", 
 //         "Age", 
 //         "Gender", 
 //         "Member Type", 
@@ -268,31 +259,27 @@
 //         [
 //           `"${member.name || ''}"`,
 //           `"${member.email || ''}"`,
-//           // `"${member.phone || ''}"`,
 //           `"${member.mobileNumber || ''}"`,
 //           `"${member.whatsappNumber || ''}"`,
 //           `"${member.isWhatsAppSame ? 'Yes' : 'No'}"`,
-//           `"${member.address || ''}"`,
-//           // `"${member.state || ''}"`,
+//           `"${(member.address || '').replace(/"/g, '""')}"`,
 //           `"${member.district || ''}"`,
 //           `"${member.lokSabha || ''}"`,
 //           `"${member.vidhanSabha || ''}"`,
 //           `"${member.ward || ''}"`,
 //           `"${member.tehsil || ''}"`,
-//           // `"${member.pincode || ''}"`,
-//           // `"${member.dateOfBirth ? new Date(member.dateOfBirth).toLocaleDateString("en-IN") : ''}"`,
 //           `"${member.age || ''}"`,
 //           `"${member.gender || ''}"`,
 //           `"${member.memberType || ''}"`,
 //           `"${member.occupation || ''}"`,
 //           `"${member.membershipId || ''}"`,
 //           `"${member.referralCode || ''}"`,
-//           `"${member.referredBy || ''}"`,
+//           `"${member.referredBy ? (typeof member.referredBy === 'object' ? member.referredBy.name : member.referredBy) : ''}"`,
 //           `"${member.joinedDate ? new Date(member.joinedDate).toLocaleDateString("en-IN") : ''}"`,
 //           `"${member.status || ''}"`,
 //           `"${member.isVolunteer ? "Yes" : "No"}"`,
 //           `"${member.volunteerSkills?.join(', ') || ''}"`,
-//           `"${member.additionalInfo || ''}"`,
+//           `"${(member.additionalInfo || '').replace(/"/g, '""')}"`,
 //           `"${member.socialMedia?.facebook || ''}"`,
 //           `"${member.socialMedia?.twitter || ''}"`,
 //           `"${member.socialMedia?.instagram || ''}"`,
@@ -408,14 +395,14 @@
 
 //               <div className="flex items-center gap-2">
 //                 <Button
-//                   onClick={exportToExcel}
-//                   disabled={exportLoading}
+//                   onClick={exportAllMembers}
+//                   disabled={exportLoading || pagination.total === 0}
 //                   variant="outline"
 //                   size="sm"
 //                   className="flex items-center gap-2"
 //                 >
 //                   <Download className="h-4 w-4" />
-//                   {exportLoading ? "Exporting..." : "Export All"}
+//                   {exportLoading ? "Exporting..." : `Export All `}
 //                 </Button>
                 
 //                 <div className="flex items-center space-x-2">
@@ -437,7 +424,7 @@
 
 //             {/* Mobile Card View */}
 //             <div className="md:hidden space-y-4">
-//               {initialMembers.map((member) => (
+//               {members.map((member) => (
 //                 <Card key={member._id} className="border border-gray-200">
 //                   <CardContent className="p-4">
 //                     <div className="flex justify-between items-start mb-3">
@@ -580,7 +567,7 @@
 //                   </TableRow>
 //                 </TableHeader>
 //                 <TableBody>
-//                   {initialMembers.map((member) => (
+//                   {members.map((member) => (
 //                     <TableRow key={member._id}>
 //                       <TableCell>
 //                         <div>
@@ -782,11 +769,7 @@
 //   )
 // }
 
-
-
-// --------------1-------------------
-
-
+// ----------1--------------
 
 "use client"
 
@@ -857,7 +840,12 @@ export function MemberManagement({
       const data = await response.json()
 
       if (response.ok) {
-        setMembers(data.members || [])
+        // Set all members to active status by default
+        const membersWithDefaultStatus = (data.members || []).map((member: Member) => ({
+          ...member,
+          status: member.status || "active" // Default to active if no status is set
+        }))
+        setMembers(membersWithDefaultStatus)
         setPagination(data.pagination)
       }
     } catch (error) {
@@ -973,7 +961,7 @@ export function MemberManagement({
             `"${member.referralCode || ''}"`,
             `"${member.referredBy ? (typeof member.referredBy === 'object' ? member.referredBy.name : member.referredBy) : ''}"`,
             `"${member.joinedDate ? new Date(member.joinedDate).toLocaleDateString("en-IN") : ''}"`,
-            `"${member.status || ''}"`,
+            `"${member.status || 'active'}"`, // Default to active for export as well
             `"${member.isVolunteer ? "Yes" : "No"}"`,
             `"${member.volunteerSkills?.join(', ') || ''}"`,
             `"${(member.additionalInfo || '').replace(/"/g, '""')}"`,
@@ -1065,7 +1053,7 @@ export function MemberManagement({
           `"${member.referralCode || ''}"`,
           `"${member.referredBy ? (typeof member.referredBy === 'object' ? member.referredBy.name : member.referredBy) : ''}"`,
           `"${member.joinedDate ? new Date(member.joinedDate).toLocaleDateString("en-IN") : ''}"`,
-          `"${member.status || ''}"`,
+          `"${member.status || 'active'}"`, // Default to active for single export as well
           `"${member.isVolunteer ? "Yes" : "No"}"`,
           `"${member.volunteerSkills?.join(', ') || ''}"`,
           `"${(member.additionalInfo || '').replace(/"/g, '""')}"`,
@@ -1098,7 +1086,7 @@ export function MemberManagement({
       pending: "bg-yellow-100 text-yellow-800",
       inactive: "bg-gray-100 text-gray-800",
     }
-    return colors[status as keyof typeof colors] || "bg-gray-100 text-gray-800"
+    return colors[status as keyof typeof colors] || "bg-green-100 text-green-800" // Default to active color
   }
 
   const getStatusIcon = (status: string) => {
@@ -1110,7 +1098,7 @@ export function MemberManagement({
       case "inactive":
         return <XCircle className="h-4 w-4 text-gray-600" />
       default:
-        return null
+        return <CheckCircle className="h-4 w-4 text-green-600" /> // Default to active icon
     }
   }
 
@@ -1222,10 +1210,10 @@ export function MemberManagement({
                         <p className="text-sm text-gray-600">ID: {member.membershipId}</p>
                       </div>
                       <div className="flex flex-col items-end space-y-1">
-                        <Badge className={`text-xs ${getStatusBadgeColor(member.status)} flex items-center gap-1`}>
+                        {/* <Badge className={`text-xs ${getStatusBadgeColor(member.status)} flex items-center gap-1`}>
                           {getStatusIcon(member.status)}
-                          {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
-                        </Badge>
+                          {member.status ? member.status.charAt(0).toUpperCase() + member.status.slice(1) : 'Active'}
+                        </Badge> */}
                         {member.isVolunteer && (
                           <Badge variant="outline" className="text-xs">
                             Volunteer
@@ -1275,66 +1263,6 @@ export function MemberManagement({
                         <FileDown className="h-4 w-4 mr-1" />
                         Export
                       </Button> */}
-                      
-                      {canManageMembers && member.status === "pending" && (
-                        <>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700">
-                                <CheckCircle className="h-4 w-4 mr-1" />
-                                Approve
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Approve Member</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to approve {member.name} as an active member?
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleStatusUpdate(member._id, "active")}
-                                  className="bg-green-600 hover:bg-green-700"
-                                >
-                                  Approve
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="flex-1 text-red-600 hover:text-red-700 bg-transparent"
-                              >
-                                <XCircle className="h-4 w-4 mr-1" />
-                                Reject
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Reject Member</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to reject {member.name}'s membership application?
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleStatusUpdate(member._id, "inactive")}
-                                  className="bg-red-600 hover:bg-red-700"
-                                >
-                                  Reject
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </>
-                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -1350,7 +1278,7 @@ export function MemberManagement({
                     <TableHead>Contact</TableHead>
                     <TableHead>Location</TableHead>
                     <TableHead>Joined</TableHead>
-                    <TableHead>Status</TableHead>
+                    {/* <TableHead>Status</TableHead> */}
                     <TableHead>Type</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -1377,12 +1305,12 @@ export function MemberManagement({
                         </div>
                       </TableCell>
                       <TableCell>{member.joinedDate ? new Date(member.joinedDate).toLocaleDateString("en-IN") : 'N/A'}</TableCell>
-                      <TableCell>
+                      {/* <TableCell>
                         <Badge className={`${getStatusBadgeColor(member.status)} flex items-center gap-1 w-fit`}>
                           {getStatusIcon(member.status)}
-                          {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
+                          {member.status ? member.status.charAt(0).toUpperCase() + member.status.slice(1) : 'Active'}
                         </Badge>
-                      </TableCell>
+                      </TableCell> */}
                       <TableCell>
                         {member.isVolunteer ? (
                           <Badge variant="outline">Volunteer</Badge>
@@ -1410,65 +1338,6 @@ export function MemberManagement({
                           >
                             <FileDown className="h-4 w-4" />
                           </Button> */}
-                          
-                          {canManageMembers && member.status === "pending" && (
-                            <>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button size="sm" className="bg-green-600 hover:bg-green-700" title="Approve Member">
-                                    <CheckCircle className="h-4 w-4" />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Approve Member</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Are you sure you want to approve {member.name} as an active member?
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() => handleStatusUpdate(member._id, "active")}
-                                      className="bg-green-600 hover:bg-green-700"
-                                    >
-                                      Approve
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="text-red-600 hover:text-red-700 bg-transparent"
-                                    title="Reject Member"
-                                  >
-                                    <XCircle className="h-4 w-4" />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Reject Member</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Are you sure you want to reject {member.name}'s membership application?
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() => handleStatusUpdate(member._id, "inactive")}
-                                      className="bg-red-600 hover:bg-red-700"
-                                    >
-                                      Reject
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </>
-                          )}
                         </div>
                       </TableCell>
                     </TableRow>

@@ -1236,6 +1236,7 @@
 
 
 // ---------------2----------
+
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -1358,7 +1359,8 @@ export function LeaderManagement({ currentLeader, referralLink }: LeaderManageme
       })
 
       if (response.ok) {
-        setPagination(prev => ({ ...prev, page: 1 }))
+        // Refresh the leaders list after deletion
+        await fetchLeaders()
       }
     } catch (error) {
       console.error("Error deleting leader:", error)
@@ -1388,25 +1390,23 @@ export function LeaderManagement({ currentLeader, referralLink }: LeaderManageme
   const handleFormSuccess = async (credentials: LeaderCredentials) => {
     setShowAddForm(false)
     
-    try {
-      // Use the getReferralLink method from party store to get the referral link
-      const referralData = await getReferralLink(credentials.referralCode)
-      
-      setLeaderCredentials({
-        ...credentials,
-        referralLink: referralData.referralLink // Use the link from getReferralLink
-      })
-    } catch (error) {
-      console.error("Error fetching referral link:", error)
-      // Fallback to the old method if getReferralLink fails
-      setLeaderCredentials({
-        ...credentials,
-        referralLink: referralLink || ""
-      })
-    }
+    // Generate the referral link using the referral code
+    const generatedReferralLink = `${window.location.origin}/join?ref=${credentials.referralCode}`
+    
+    setLeaderCredentials({
+      ...credentials,
+      referralLink: generatedReferralLink
+    })
     
     setShowCredentialsDialog(true)
-    setPagination(prev => ({ ...prev, page: 1 }))
+    // Refresh the leaders list after adding new leader
+    await fetchLeaders()
+  }
+
+  const handleEditFormSuccess = async () => {
+    setEditingLeader(null)
+    // Refresh the leaders list after editing
+    await fetchLeaders()
   }
 
   const handleViewDetails = async (leader: Leader) => {
@@ -1428,7 +1428,7 @@ export function LeaderManagement({ currentLeader, referralLink }: LeaderManageme
       organization_secretary: "bg-green-100 text-green-800",
       state_convenor: "bg-purple-100 text-purple-800",
       district_convenor: "bg-gray-100 text-gray-800",
-      party_admin: "bg-indigo-100 text-indigo-800", // Added party_admin color
+      party_admin: "bg-indigo-100 text-indigo-800",
     }
     return colors[role as keyof typeof colors] || "bg-gray-100 text-gray-800"
   }
@@ -1452,7 +1452,7 @@ export function LeaderManagement({ currentLeader, referralLink }: LeaderManageme
 
   return (
     <div className="space-y-6">
-      {/* Credentials Dialog - Removed Referral Code */}
+      {/* Credentials Dialog - Only showing Referral Link */}
       <Dialog open={showCredentialsDialog} onOpenChange={setShowCredentialsDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -1756,10 +1756,7 @@ export function LeaderManagement({ currentLeader, referralLink }: LeaderManageme
                               </DialogHeader>
                               <LeaderForm
                                 leader={leader}
-                                onSuccess={() => {
-                                  setEditingLeader(null)
-                                  fetchLeaders()
-                                }}
+                                onSuccess={handleEditFormSuccess}
                               />
                             </DialogContent>
                           </Dialog>
@@ -1810,7 +1807,6 @@ export function LeaderManagement({ currentLeader, referralLink }: LeaderManageme
                     <TableHead>Position</TableHead>
                     <TableHead>Role</TableHead>
                     <TableHead>Contact</TableHead>
-                    <TableHead>Status</TableHead>
                     <TableHead>View Details</TableHead>
                     {/* Show Actions column only for party_admin */}
                     {canPerformActions && <TableHead>Actions</TableHead>}
@@ -1833,11 +1829,6 @@ export function LeaderManagement({ currentLeader, referralLink }: LeaderManageme
                         <div className="text-sm">
                           <div>{leader.phone}</div>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={leader.isActive ? "default" : "secondary"}>
-                          {leader.isActive ? "Active" : "Inactive"}
-                        </Badge>
                       </TableCell>
                       <TableCell>
                         <Button
@@ -1866,10 +1857,7 @@ export function LeaderManagement({ currentLeader, referralLink }: LeaderManageme
                                   </DialogHeader>
                                   <LeaderForm
                                     leader={leader}
-                                    onSuccess={() => {
-                                      setEditingLeader(null)
-                                      fetchLeaders()
-                                    }}
+                                    onSuccess={handleEditFormSuccess}
                                   />
                                 </DialogContent>
                               </Dialog>
