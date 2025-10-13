@@ -73,6 +73,7 @@
     "ts-node": "^10.9.2",
     "use-sync-external-store": "latest",
     "vaul": "latest",
+    "xlsx": "^0.18.5",
     "zod": "latest",
     "zustand": "latest"
   },

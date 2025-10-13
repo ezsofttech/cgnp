@@ -1,5 +1,3 @@
-
-
 "use client"
 
 import { useEffect, useState } from "react"
@@ -11,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { useAuthStore } from "@/lib/stores/auth-store"
 import { usePartyStore } from "@/lib/stores/party-store"
-import { Users, LinkIcon, Copy, Plus, LogOut, Shield, UserPlus, BarChart3 } from "lucide-react"
+import { Users, LinkIcon, Copy, Plus, LogOut, Shield, UserPlus, BarChart3, Settings } from "lucide-react"
 import { MemberForm } from "@/components/forms/member-form"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { LeaderManagement } from "@/components/dashboard/leader-management"
@@ -20,8 +18,10 @@ import { DashboardStats } from "@/components/dashboard/dashboard-stats"
 import { AnalyticsDashboard } from "@/components/dashboard/analytics-dashboard"
 import { PartyInfoForm } from "@/components/dashboard/party-info"
 import { toast } from "@/components/ui/use-toast"
+import { AdminDashboard } from "@/components/dashboard/admin-dashboard"
+
 export default function LeaderDashboard() {
-  const { leader,isInitialized, isAuthenticated, logout, checkAuth } = useAuthStore()
+  const { leader, isInitialized, isAuthenticated, logout, checkAuth } = useAuthStore()
   const { members, fetchMembers, generateReferralLink } = usePartyStore()
   const router = useRouter()
   const [showAddMember, setShowAddMember] = useState(false)
@@ -31,11 +31,10 @@ export default function LeaderDashboard() {
 
   useEffect(() => {
     checkAuth()
-    console.log("isch4ckout authenticate",isAuthenticated)
   }, [checkAuth])
 
   useEffect(() => {
-      if (isInitialized && !isAuthenticated) {
+    if (isInitialized && !isAuthenticated) {
       router.push("/leader/login")
     }
 
@@ -44,10 +43,9 @@ export default function LeaderDashboard() {
       setReferralLink(link)
       fetchMembers(leader.referralCode)
     }
-  }, [isAuthenticated,isInitialized, leader, generateReferralLink, fetchMembers, router])
+  }, [isAuthenticated, isInitialized, leader, generateReferralLink, fetchMembers, router])
 
   const [initialData, setInitialData] = useState(null)
-
 
   useEffect(() => {
     const fetchPartyInfo = async () => {
@@ -70,14 +68,11 @@ export default function LeaderDashboard() {
           description: "Failed to load party information",
           variant: "destructive",
         })
-      } finally {
-      
       }
     }
 
     fetchPartyInfo()
   }, [])
-
 
   const handleCopyLink = async () => {
     try {
@@ -105,6 +100,7 @@ export default function LeaderDashboard() {
   const leaderMembers = members
   const hasAnalyticsPermission = leader?.permissions?.includes("view_analytics")
   const hasAdminAccess = leader?.permissions?.includes("admin_access")
+  const isPartyAdmin = leader?.role === "party_admin" || hasAdminAccess
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -122,6 +118,12 @@ export default function LeaderDashboard() {
                     <Shield className="h-4 w-4" />
                     <span>{leader?.position}</span>
                   </span>
+                  {isPartyAdmin && (
+                    <span className="flex items-center space-x-1 bg-blue-500 px-2 py-1 rounded-full text-xs">
+                      <Settings className="h-3 w-3" />
+                      <span>Party Admin</span>
+                    </span>
+                  )}
                   <span>Member since {leader?.joinedDate}</span>
                   <span className="flex items-center space-x-1">
                     <span className="w-2 h-2 bg-green-400 rounded-full"></span>
@@ -142,12 +144,7 @@ export default function LeaderDashboard() {
 
           {/* Dashboard Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="flex justify-around w-full  bg-white shadow-sm">
-              {/* <TabsTrigger value="overview" className="text-xs md:text-sm">
-                <TrendingUp className="h-4 w-4 mr-1 md:mr-2" />
-                <span className="hidden sm:inline">Overview</span>
-                <span className="sm:hidden">Stats</span>
-              </TabsTrigger> */}
+            <TabsList className="flex justify-around w-full bg-white shadow-sm">
               {hasAnalyticsPermission && (
                 <TabsTrigger value="analytics" className="text-xs md:text-sm">
                   <BarChart3 className="h-4 w-4 mr-1 md:mr-2" />
@@ -155,29 +152,41 @@ export default function LeaderDashboard() {
                   <span className="sm:hidden">Charts</span>
                 </TabsTrigger>
               )}
-                <TabsTrigger value="leaders" className="text-xs md:text-sm">
-                  <Shield className="h-4 w-4 mr-1 md:mr-2" />
-                  <span className="hidden sm:inline">Leaders</span>
-                  <span className="sm:hidden">Leaders</span>
-                </TabsTrigger>
+              
+              <TabsTrigger value="leaders" className="text-xs md:text-sm">
+                <Shield className="h-4 w-4 mr-1 md:mr-2" />
+                <span className="hidden sm:inline">Leaders</span>
+                <span className="sm:hidden">Leaders</span>
+              </TabsTrigger>
+              
               <TabsTrigger value="members" className="text-xs md:text-sm">
                 <Users className="h-4 w-4 mr-1 md:mr-2" />
                 <span className="hidden sm:inline">Members</span>
                 <span className="sm:hidden">Members</span>
               </TabsTrigger>
+              
               <TabsTrigger value="referral" className="text-xs md:text-sm">
                 <LinkIcon className="h-4 w-4 mr-1 md:mr-2" />
                 <span className="hidden sm:inline">Referral</span>
                 <span className="sm:hidden">Refer</span>
               </TabsTrigger>
- {hasAdminAccess && (
+
+              {/* New Party Admin Tab */}
+              {isPartyAdmin && (
+                <TabsTrigger value="admin" className="text-xs md:text-sm">
+                  <Settings className="h-4 w-4 mr-1 md:mr-2" />
+                  <span className="hidden sm:inline">Member Database</span>
+                  <span className="sm:hidden">Member Database</span>
+                </TabsTrigger>
+              )}
+
+              {hasAdminAccess && (
                 <TabsTrigger value="setting" className="text-xs md:text-sm">
                   <BarChart3 className="h-4 w-4 mr-1 md:mr-2" />
                   <span className="hidden sm:inline">Setting</span>
                   <span className="sm:hidden">Party Info</span>
                 </TabsTrigger>
               )}
-
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
@@ -239,15 +248,20 @@ export default function LeaderDashboard() {
               </TabsContent>
             )}
 
-          
-              <TabsContent value="leaders">
-                <LeaderManagement currentLeader={leader} />
-              </TabsContent>
-
+            <TabsContent value="leaders">
+              <LeaderManagement currentLeader={leader} />
+            </TabsContent>
 
             <TabsContent value="members">
               <MemberManagement members={leaderMembers} currentLeader={leader} />
             </TabsContent>
+
+            {/* New Party Admin Tab Content */}
+            {isPartyAdmin && (
+              <TabsContent value="admin">
+                <AdminDashboard />
+              </TabsContent>
+            )}
 
             <TabsContent value="referral" className="space-y-6">
               <Card className="border-0 shadow-lg">
@@ -295,10 +309,81 @@ export default function LeaderDashboard() {
               </Card>
             </TabsContent>
 
-                <TabsContent value="setting">
-               <PartyInfoForm initialData={initialData} />
-            </TabsContent>
+            {/* New Party Admin Tab Content */}
+            {/* {isPartyAdmin && (
+              <TabsContent value="admin">
+                <Card className="border-0 shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="text-xl text-gray-900 flex items-center">
+                      <Settings className="h-5 w-5 mr-2 text-blue-600" />
+                      Party Administration
+                    </CardTitle>
+                    <p className="text-sm text-gray-600">Manage party-wide settings and configurations</p>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <Card className="border border-gray-200">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-lg">System Settings</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-sm text-gray-600 mb-4">Configure party-wide system settings</p>
+                          <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                            Manage Settings
+                          </Button>
+                        </CardContent>
+                      </Card>
 
+                      <Card className="border border-gray-200">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-lg">User Management</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-sm text-gray-600 mb-4">Manage all users and permissions</p>
+                          <Button variant="outline" className="w-full">
+                            View All Users
+                          </Button>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="border border-gray-200">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-lg">Reports</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-sm text-gray-600 mb-4">Generate party-wide reports</p>
+                          <Button variant="outline" className="w-full">
+                            Generate Reports
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h3 className="font-semibold text-gray-900 mb-2">Quick Actions</h3>
+                      <div className="flex flex-wrap gap-2">
+                        <Button variant="outline" size="sm">
+                          Backup Data
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          System Logs
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          Audit Trail
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          Export Data
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            )} */}
+
+            <TabsContent value="setting">
+              <PartyInfoForm initialData={initialData} />
+            </TabsContent>
           </Tabs>
         </div>
       </main>
