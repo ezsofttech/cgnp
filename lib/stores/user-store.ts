@@ -30,7 +30,7 @@ export interface User {
   vidhansabha: string
   boothNo: string
   state: string
-  category: "General" | "OBC" | "SC" | "ST" | "Other"
+  category: string
   politicalParty: string
   remarks: string
   mobileNumber?: string
@@ -54,7 +54,7 @@ export interface CreateUserData {
   vidhansabha: string
   boothNo: string
   state: string
-  category: "General" | "OBC" | "SC" | "ST" | "Other"
+  category: string
   politicalParty: string
   remarks?: string
   mobileNumber?: string

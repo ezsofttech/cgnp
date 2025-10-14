@@ -160,9 +160,9 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error("Create member error:", error)
 
-    if (error.code === 11000) {
-      return NextResponse.json({ error: "Email already exists" }, { status: 400 })
-    }
+    // if (error.code === 11000) {
+    //   return NextResponse.json({ error: "Email already exists" }, { status: 400 })
+    // }
 
     if (error.name === "ValidationError") {
       const errors = Object.values(error.errors).map((err: any) => err.message)
