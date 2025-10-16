@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -216,7 +215,7 @@ export function LeaderManagement({ currentLeader, referralLink }: LeaderManageme
     <div className="space-y-6">
       {/* Credentials Dialog - Only showing Referral Link */}
       <Dialog open={showCredentialsDialog} onOpenChange={setShowCredentialsDialog}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-w-[95vw] mx-auto">
           <DialogHeader>
             <DialogTitle className="text-center">Leader Created Successfully!</DialogTitle>
           </DialogHeader>
@@ -237,7 +236,7 @@ export function LeaderManagement({ currentLeader, referralLink }: LeaderManageme
                   <Input
                     value={leaderCredentials?.email || ''}
                     readOnly
-                    className="flex-1 font-mono text-sm"
+                    className="flex-1 font-mono text-sm min-w-0"
                   />
                   <Button
                     size="sm"
@@ -256,7 +255,7 @@ export function LeaderManagement({ currentLeader, referralLink }: LeaderManageme
                     type="password"
                     value={leaderCredentials?.password || ''}
                     readOnly
-                    className="flex-1 font-mono text-sm"
+                    className="flex-1 font-mono text-sm min-w-0"
                   />
                   <Button
                     size="sm"
@@ -278,7 +277,7 @@ export function LeaderManagement({ currentLeader, referralLink }: LeaderManageme
                   <Input
                     value={leaderCredentials?.referralLink || ''}
                     readOnly
-                    className="flex-1 font-mono text-sm"
+                    className="flex-1 font-mono text-sm min-w-0"
                   />
                   <Button
                     size="sm"
@@ -303,7 +302,7 @@ export function LeaderManagement({ currentLeader, referralLink }: LeaderManageme
             <div className="flex justify-center pt-2">
               <Button 
                 onClick={() => setShowCredentialsDialog(false)}
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
               >
                 Done
               </Button>
@@ -314,7 +313,7 @@ export function LeaderManagement({ currentLeader, referralLink }: LeaderManageme
 
       {/* View Details Dialog */}
       <Dialog open={!!viewDetailsLeader} onOpenChange={() => setViewDetailsLeader(null)}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent className="sm:max-w-2xl max-w-[95vw] mx-auto max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-center">Leader Details</DialogTitle>
           </DialogHeader>
@@ -348,13 +347,13 @@ export function LeaderManagement({ currentLeader, referralLink }: LeaderManageme
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Role:</span>
-                      <Badge className={`${getRoleBadgeColor(viewDetailsLeader.role)}`}>
+                      <Badge className={`${getRoleBadgeColor(viewDetailsLeader.role)} text-xs`}>
                         {formatRole(viewDetailsLeader.role)}
                       </Badge>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Status:</span>
-                      <Badge variant={viewDetailsLeader.isActive ? "default" : "secondary"}>
+                      <Badge variant={viewDetailsLeader.isActive ? "default" : "secondary"} className="text-xs">
                         {viewDetailsLeader.isActive ? "Active" : "Inactive"}
                       </Badge>
                     </div>
@@ -392,7 +391,7 @@ export function LeaderManagement({ currentLeader, referralLink }: LeaderManageme
                   <Input
                     value={`${window.location.origin}/join?ref=${viewDetailsLeader.referralCode}`}
                     readOnly
-                    className="flex-1 font-mono text-sm"
+                    className="flex-1 font-mono text-sm min-w-0"
                   />
                   <Button
                     size="sm"
@@ -413,7 +412,7 @@ export function LeaderManagement({ currentLeader, referralLink }: LeaderManageme
 
       <Card className="border-0 shadow-lg">
         <CardHeader>
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <CardTitle className="text-xl text-gray-900">Leader Management</CardTitle>
               <p className="text-sm text-gray-600">Manage CG NP leaders and their roles</p>
@@ -422,12 +421,12 @@ export function LeaderManagement({ currentLeader, referralLink }: LeaderManageme
             {canPerformActions && (
               <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
                 <DialogTrigger asChild>
-                  <Button className="bg-blue-600 hover:bg-blue-700 w-full md:w-auto">
+                  <Button className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
                     <Plus className="h-4 w-4 mr-2" />
                     Add Leader
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto max-w-[95vw] mx-auto">
                   <DialogHeader>
                     <DialogTitle>Add New Leader</DialogTitle>
                   </DialogHeader>
@@ -441,18 +440,18 @@ export function LeaderManagement({ currentLeader, referralLink }: LeaderManageme
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex items-center space-x-2 flex-1">
-                <Search className="h-4 w-4 text-gray-400" />
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex items-center space-x-2 flex-1 min-w-0">
+                <Search className="h-4 w-4 text-gray-400 flex-shrink-0" />
                 <Input
                   placeholder="Search leaders by name, email, or position..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="flex-1"
+                  className="flex-1 min-w-0"
                 />
               </div>
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-600">Show:</span>
+              <div className="flex items-center space-x-2 flex-shrink-0">
+                <span className="text-sm text-gray-600 whitespace-nowrap">Show:</span>
                 <select
                   value={pagination.limit}
                   onChange={(e) => handleLimitChange(Number(e.target.value))}
@@ -463,39 +462,41 @@ export function LeaderManagement({ currentLeader, referralLink }: LeaderManageme
                   <option value="20">20</option>
                   <option value="50">50</option>
                 </select>
-                <span className="text-sm text-gray-600">per page</span>
+                <span className="text-sm text-gray-600 whitespace-nowrap">per page</span>
               </div>
             </div>
 
             {/* Mobile Card View */}
-            <div className="md:hidden space-y-4">
+            <div className="block sm:hidden space-y-4">
               {filteredLeaders.map((leader) => (
                 <Card key={leader._id} className="border border-gray-200">
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start mb-3">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900">{leader.name}</h3>
-                        <p className="text-sm text-gray-600">{leader.position}</p>
+                      <div className="flex-1 min-w-0 mr-2">
+                        <h3 className="font-semibold text-gray-900 truncate">{leader.name}</h3>
+                        <p className="text-sm text-gray-600 truncate">{leader.position}</p>
                       </div>
-                      <Badge className={`text-xs ${getRoleBadgeColor(leader.role)}`}>{formatRole(leader.role)}</Badge>
+                      <Badge className={`text-xs ${getRoleBadgeColor(leader.role)} flex-shrink-0`}>
+                        {formatRole(leader.role)}
+                      </Badge>
                     </div>
 
                     <div className="space-y-2 text-sm text-gray-600">
-                      <div className="flex items-center">
-                        <Mail className="h-4 w-4 mr-2" />
+                      <div className="flex items-center min-w-0">
+                        <Mail className="h-4 w-4 mr-2 flex-shrink-0" />
                         <span className="truncate">{leader.email}</span>
                       </div>
                       <div className="flex items-center">
-                        <Phone className="h-4 w-4 mr-2" />
-                        <span>{leader.phone}</span>
+                        <Phone className="h-4 w-4 mr-2 flex-shrink-0" />
+                        <span className="truncate">{leader.phone}</span>
                       </div>
                     </div>
 
-                    <div className="flex space-x-2 mt-4">
+                    <div className="flex flex-wrap gap-2 mt-4">
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="flex-1 bg-transparent"
+                        className="flex-1 min-w-[120px] bg-transparent"
                         onClick={() => handleViewDetails(leader)}
                       >
                         <Eye className="h-4 w-4 mr-1" />
@@ -507,12 +508,12 @@ export function LeaderManagement({ currentLeader, referralLink }: LeaderManageme
                         <>
                           <Dialog>
                             <DialogTrigger asChild>
-                              <Button variant="outline" size="sm" className="flex-1 bg-transparent">
+                              <Button variant="outline" size="sm" className="flex-1 min-w-[120px] bg-transparent">
                                 <Edit className="h-4 w-4 mr-1" />
                                 Edit
                               </Button>
                             </DialogTrigger>
-                            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto max-w-[95vw] mx-auto">
                               <DialogHeader>
                                 <DialogTitle>Edit Leader</DialogTitle>
                               </DialogHeader>
@@ -528,13 +529,13 @@ export function LeaderManagement({ currentLeader, referralLink }: LeaderManageme
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="flex-1 text-red-600 hover:text-red-700 bg-transparent"
+                                className="flex-1 min-w-[120px] text-red-600 hover:text-red-700 bg-transparent"
                               >
                                 <Trash2 className="h-4 w-4 mr-1" />
                                 Delete
                               </Button>
                             </AlertDialogTrigger>
-                            <AlertDialogContent>
+                            <AlertDialogContent className="max-w-[95vw] mx-auto">
                               <AlertDialogHeader>
                                 <AlertDialogTitle>Delete Leader</AlertDialogTitle>
                                 <AlertDialogDescription>
@@ -561,7 +562,7 @@ export function LeaderManagement({ currentLeader, referralLink }: LeaderManageme
             </div>
 
             {/* Desktop Table View */}
-            <div className="hidden md:block">
+            <div className="hidden sm:block overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -663,13 +664,13 @@ export function LeaderManagement({ currentLeader, referralLink }: LeaderManageme
             </div>
 
             {/* Pagination Controls */}
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-4">
-              <div className="text-sm text-gray-600">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
+              <div className="text-sm text-gray-600 whitespace-nowrap">
                 Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
                 {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
                 {pagination.total} leaders
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 flex-wrap justify-center">
                 <Button
                   variant="outline"
                   size="sm"
@@ -679,7 +680,7 @@ export function LeaderManagement({ currentLeader, referralLink }: LeaderManageme
                   <ChevronLeft className="h-4 w-4" />
                   Previous
                 </Button>
-                <div className="flex items-center space-x-1">
+                <div className="flex items-center space-x-1 flex-wrap justify-center">
                   {Array.from({ length: Math.min(5, pagination.pages) }, (_, i) => {
                     let pageNum
                     if (pagination.pages <= 5) {
@@ -697,6 +698,7 @@ export function LeaderManagement({ currentLeader, referralLink }: LeaderManageme
                         variant={pagination.page === pageNum ? "default" : "outline"}
                         size="sm"
                         onClick={() => handlePageChange(pageNum)}
+                        className="min-w-[40px]"
                       >
                         {pageNum}
                       </Button>
@@ -710,6 +712,7 @@ export function LeaderManagement({ currentLeader, referralLink }: LeaderManageme
                       variant="outline"
                       size="sm"
                       onClick={() => handlePageChange(pagination.pages)}
+                      className="min-w-[40px]"
                     >
                       {pagination.pages}
                     </Button>

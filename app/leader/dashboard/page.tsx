@@ -144,181 +144,203 @@ export default function LeaderDashboard() {
           </div>
 
           {/* Dashboard Tabs - Improved Mobile Responsiveness */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
-            <TabsList className="grid grid-cols-3 sm:flex sm:justify-around w-full bg-white shadow-sm p-1 gap-1 overflow-x-auto">
-              {hasAnalyticsPermission && (
-                <TabsTrigger value="analytics" className="text-xs p-2 h-auto min-h-[40px]">
-                  <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                  <span className="hidden xs:inline">Analytics</span>
-                  <span className="xs:hidden">Analytics</span>
-                </TabsTrigger>
-              )}
-              
-              <TabsTrigger value="leaders" className="text-xs p-2 h-auto min-h-[40px]">
-                <Shield className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                <span>Leaders</span>
-              </TabsTrigger>
-              
-              <TabsTrigger value="members" className="text-xs p-2 h-auto min-h-[40px]">
-                <Users className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                <span>Members</span>
-              </TabsTrigger>
-              
-              <TabsTrigger value="referral" className="text-xs p-2 h-auto min-h-[40px]">
-                <LinkIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                <span className="hidden xs:inline">Referral</span>
-                <span className="xs:hidden">Refer</span>
-              </TabsTrigger>
+<Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
+<TabsList
+  className="
+    grid w-full shadow-sm p-1 gap-1 rounded-md
+    grid-cols-3 sm:flex sm:flex-nowrap sm:gap-2 mb-16
+    bg-transparent sm:bg-white
+  "
+>
 
-              {/* New Party Admin Tab */}
-              {isPartyAdmin && (
-                <TabsTrigger value="admin" className="text-xs p-2 h-auto min-h-[40px]">
-                  <Settings className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                  <span className="hidden sm:inline">Database</span>
-                  <span className="sm:hidden">DB</span>
-                </TabsTrigger>
-              )}
+  {hasAnalyticsPermission && (
+    <TabsTrigger
+      value="analytics"
+      className="flex-1 text-xs p-2 h-auto min-h-[40px] flex items-center justify-center"
+    >
+      <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+      <span>Analytics</span>
+    </TabsTrigger>
+  )}
 
-              {hasAdminAccess && (
-                <TabsTrigger value="setting" className="text-xs p-2 h-auto min-h-[40px]">
-                  <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                  <span className="hidden sm:inline">Party Info</span>
-                  <span className="sm:hidden">Info</span>
-                </TabsTrigger>
-              )}
-            </TabsList>
+  <TabsTrigger
+    value="leaders"
+    className="flex-1 text-xs p-2 h-auto min-h-[40px] flex items-center justify-center"
+  >
+    <Shield className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+    <span>Leaders</span>
+  </TabsTrigger>
 
-            <TabsContent value="overview" className="space-y-4 md:space-y-6">
-              <DashboardStats leader={leader} members={leaderMembers} />
+  <TabsTrigger
+    value="members"
+    className="flex-1 text-xs p-2 h-auto min-h-[40px] flex items-center justify-center"
+  >
+    <Users className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+    <span>Members</span>
+  </TabsTrigger>
 
-              {/* Quick Actions - Improved Mobile Layout */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
-                <Card className="border-0 shadow-lg">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base md:text-lg text-gray-900 flex items-center">
-                      <UserPlus className="h-4 w-4 md:h-5 md:w-5 mr-2 text-blue-600" />
-                      Quick Add Member
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Button
-                      onClick={() => setShowAddMember(!showAddMember)}
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-sm"
-                      size="sm"
-                    >
-                      <Plus className="h-3 w-3 md:h-4 md:w-4 mr-2" />
-                      Add New Member
-                    </Button>
-                    {showAddMember && (
-                      <div className="mt-4">
-                        <MemberForm referralCode={leader?.referralCode} />
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+  <TabsTrigger
+    value="referral"
+    className="flex-1 text-xs p-2 h-auto min-h-[40px] flex items-center justify-center"
+  >
+    <LinkIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+    <span>Referral</span>
+  </TabsTrigger>
 
-                <Card className="border-0 shadow-lg">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base md:text-lg text-gray-900 flex items-center">
-                      <LinkIcon className="h-4 w-4 md:h-5 md:w-5 mr-2 text-blue-600" />
-                      Share Referral
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex flex-col xs:flex-row gap-2 xs:space-x-2">
-                      <Input 
-                        value={referralLink} 
-                        readOnly 
-                        className="flex-1 bg-gray-50 text-xs md:text-sm min-w-0" 
-                      />
-                      <Button
-                        onClick={handleCopyLink}
-                        variant="outline"
-                        className="border-blue-600 text-blue-600 hover:bg-blue-50 bg-transparent px-3 text-sm whitespace-nowrap"
-                        size="sm"
-                      >
-                        <Copy className="h-3 w-3 md:h-4 md:w-4" />
-                        <span className="ml-1">{copied ? "Copied!" : "Copy"}</span>
-                      </Button>
-                    </div>
-                    <p className="text-xs text-gray-500">Share this link to invite people to join AAP</p>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
+  {isPartyAdmin && (
+    <TabsTrigger
+      value="admin"
+      className="flex-1 text-xs p-2 h-auto min-h-[40px] flex items-center justify-center"
+    >
+      <Settings className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+      <span>Database</span>
+    </TabsTrigger>
+  )}
 
-            {hasAnalyticsPermission && (
-              <TabsContent value="analytics">
-                <AnalyticsDashboard leader={leader} />
-              </TabsContent>
-            )}
+  {hasAdminAccess && (
+    <TabsTrigger
+      value="setting"
+      className="flex-1 text-xs p-2 h-auto min-h-[40px] flex items-center justify-center"
+    >
+      <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+      <span>Party Info</span>
+    </TabsTrigger>
+  )}
+</TabsList>
 
-            <TabsContent value="leaders">
-              <LeaderManagement currentLeader={leader} />
-            </TabsContent>
 
-            <TabsContent value="members">
-              <MemberManagement members={leaderMembers} currentLeader={leader} />
-            </TabsContent>
 
-            {/* New Party Admin Tab Content */}
-            {isPartyAdmin && (
-              <TabsContent value="admin">
-                <AdminDashboard />
-              </TabsContent>
-            )}
+  <TabsContent value="overview" className="space-y-4 md:space-y-6">
+    <DashboardStats leader={leader} members={leaderMembers} />
 
-            <TabsContent value="referral" className="space-y-4 md:space-y-6">
-              <Card className="border-0 shadow-lg">
-                <CardHeader>
-                  <CardTitle className="text-lg md:text-xl text-gray-900">Referral Management</CardTitle>
-                  <p className="text-xs md:text-sm text-gray-600">Manage your referral link and track your referral performance</p>
-                </CardHeader>
-                <CardContent className="space-y-4 md:space-y-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
-                    <div className="bg-blue-50 p-3 md:p-4 rounded-lg text-center">
-                      <div className="text-xl md:text-2xl font-bold text-blue-600 truncate">{leader?.referralCode}</div>
-                      <div className="text-xs md:text-sm text-blue-700">Your Code</div>
-                    </div>
-                    <div className="bg-green-50 p-3 md:p-4 rounded-lg text-center">
-                      <div className="text-xl md:text-2xl font-bold text-green-600">{leaderMembers?.length}</div>
-                      <div className="text-xs md:text-sm text-green-700">Total Referrals</div>
-                    </div>
-                    <div className="bg-yellow-50 p-3 md:p-4 rounded-lg text-center">
-                      <div className="text-xl md:text-2xl font-bold text-yellow-600">
-                        {leaderMembers?.filter((m) => m.status === "active").length}
-                      </div>
-                      <div className="text-xs md:text-sm text-yellow-700">Active Members</div>
-                    </div>
-                  </div>
+    {/* Quick Actions - Improved Mobile Layout */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
+      <Card className="border-0 shadow-lg">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base md:text-lg text-gray-900 flex items-center">
+            <UserPlus className="h-4 w-4 md:h-5 md:w-5 mr-2 text-blue-600" />
+            Quick Add Member
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Button
+            onClick={() => setShowAddMember(!showAddMember)}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-sm"
+            size="sm"
+          >
+            <Plus className="h-3 w-3 md:h-4 md:w-4 mr-2" />
+            Add New Member
+          </Button>
+          {showAddMember && (
+            <div className="mt-4">
+              <MemberForm referralCode={leader?.referralCode} />
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-                  <div className="space-y-3 md:space-y-4">
-                    <h3 className="font-semibold text-gray-900 text-base md:text-lg">Share Your Referral Link</h3>
-                    <div className="flex flex-col sm:flex-row gap-2 sm:space-x-2">
-                      <Input value={referralLink} readOnly className="flex-1 bg-gray-50 text-xs md:text-sm" />
-                      <Button
-                        onClick={handleCopyLink}
-                        variant="outline"
-                        className="border-blue-600 text-blue-600 hover:bg-blue-50 bg-transparent text-sm whitespace-nowrap"
-                        size="sm"
-                      >
-                        <Copy className="h-3 w-3 md:h-4 md:w-4 mr-2" />
-                        {copied ? "Copied!" : "Copy Link"}
-                      </Button>
-                    </div>
-                    <p className="text-xs md:text-sm text-gray-500">
-                      Share this link on social media, WhatsApp, or email to invite people to join AAP through your
-                      referral
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
+      <Card className="border-0 shadow-lg">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base md:text-lg text-gray-900 flex items-center">
+            <LinkIcon className="h-4 w-4 md:h-5 md:w-5 mr-2 text-blue-600" />
+            Share Referral
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex flex-col xs:flex-row gap-2 xs:space-x-2">
+            <Input 
+              value={referralLink} 
+              readOnly 
+              className="flex-1 bg-gray-50 text-xs md:text-sm min-w-0" 
+            />
+            <Button
+              onClick={handleCopyLink}
+              variant="outline"
+              className="border-blue-600 text-blue-600 hover:bg-blue-50 bg-transparent px-3 text-sm whitespace-nowrap"
+              size="sm"
+            >
+              <Copy className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="ml-1">{copied ? "Copied!" : "Copy"}</span>
+            </Button>
+          </div>
+          <p className="text-xs text-gray-500">Share this link to invite people to join AAP</p>
+        </CardContent>
+      </Card>
+    </div>
+  </TabsContent>
 
-            <TabsContent value="setting">
-              <PartyInfoForm initialData={initialData} />
-            </TabsContent>
-          </Tabs>
+  {hasAnalyticsPermission && (
+    <TabsContent value="analytics">
+      <AnalyticsDashboard leader={leader} />
+    </TabsContent>
+  )}
+
+  <TabsContent value="leaders">
+    <LeaderManagement currentLeader={leader} />
+  </TabsContent>
+
+  <TabsContent value="members">
+    <MemberManagement members={leaderMembers} currentLeader={leader} />
+  </TabsContent>
+
+  {/* New Party Admin Tab Content */}
+  {isPartyAdmin && (
+    <TabsContent value="admin">
+      <AdminDashboard />
+    </TabsContent>
+  )}
+
+  <TabsContent value="referral" className="space-y-4 md:space-y-6">
+    <Card className="border-0 shadow-lg">
+      <CardHeader>
+        <CardTitle className="text-lg md:text-xl text-gray-900">Referral Management</CardTitle>
+        <p className="text-xs md:text-sm text-gray-600">Manage your referral link and track your referral performance</p>
+      </CardHeader>
+      <CardContent className="space-y-4 md:space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
+          <div className="bg-blue-50 p-3 md:p-4 rounded-lg text-center">
+            <div className="text-xl md:text-2xl font-bold text-blue-600 truncate">{leader?.referralCode}</div>
+            <div className="text-xs md:text-sm text-blue-700">Your Code</div>
+          </div>
+          <div className="bg-green-50 p-3 md:p-4 rounded-lg text-center">
+            <div className="text-xl md:text-2xl font-bold text-green-600">{leaderMembers?.length}</div>
+            <div className="text-xs md:text-sm text-green-700">Total Referrals</div>
+          </div>
+          <div className="bg-yellow-50 p-3 md:p-4 rounded-lg text-center">
+            <div className="text-xl md:text-2xl font-bold text-yellow-600">
+              {leaderMembers?.filter((m) => m.status === "active").length}
+            </div>
+            <div className="text-xs md:text-sm text-yellow-700">Active Members</div>
+          </div>
+        </div>
+
+        <div className="space-y-3 md:space-y-4">
+          <h3 className="font-semibold text-gray-900 text-base md:text-lg">Share Your Referral Link</h3>
+          <div className="flex flex-col sm:flex-row gap-2 sm:space-x-2">
+            <Input value={referralLink} readOnly className="flex-1 bg-gray-50 text-xs md:text-sm" />
+            <Button
+              onClick={handleCopyLink}
+              variant="outline"
+              className="border-blue-600 text-blue-600 hover:bg-blue-50 bg-transparent text-sm whitespace-nowrap"
+              size="sm"
+            >
+              <Copy className="h-3 w-3 md:h-4 md:w-4 mr-2" />
+              {copied ? "Copied!" : "Copy Link"}
+            </Button>
+          </div>
+          <p className="text-xs md:text-sm text-gray-500">
+            Share this link on social media, WhatsApp, or email to invite people to join AAP through your
+            referral
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  </TabsContent>
+
+  <TabsContent value="setting">
+    <PartyInfoForm initialData={initialData} />
+  </TabsContent>
+</Tabs>
         </div>
       </main>
       <Footer />
