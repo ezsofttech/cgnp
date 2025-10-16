@@ -85,10 +85,10 @@ export function AnalyticsDashboard({ leader }: AnalyticsDashboardProps) {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4 md:space-y-6">
         <Card className="border-0 shadow-lg">
-          <CardContent className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <CardContent className="flex items-center justify-center py-8 md:py-12">
+            <div className="animate-spin rounded-full h-6 w-6 md:h-8 md:w-8 border-b-2 border-blue-600"></div>
           </CardContent>
         </Card>
       </div>
@@ -98,29 +98,31 @@ export function AnalyticsDashboard({ leader }: AnalyticsDashboardProps) {
   if (!analytics) {
     return (
       <Card className="border-0 shadow-lg">
-        <CardContent className="flex items-center justify-center py-12">
-          <p className="text-gray-500">Failed to load analytics data</p>
+        <CardContent className="flex items-center justify-center py-8 md:py-12">
+          <p className="text-gray-500 text-sm md:text-base">Failed to load analytics data</p>
         </CardContent>
       </Card>
     )
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Analytics Header */}
       <Card className="border-0 shadow-lg">
-        <CardHeader>
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <CardTitle className="text-xl text-gray-900 flex items-center">
-                <BarChart3 className="h-6 w-6 mr-2 text-blue-600" />
+        <CardHeader className="pb-4">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 md:gap-4">
+            <div className="space-y-2 flex-1">
+              <CardTitle className="text-lg md:text-xl text-gray-900 flex items-center">
+                <BarChart3 className="h-5 w-5 md:h-6 md:w-6 mr-2 text-blue-600" />
                 Analytics Dashboard
               </CardTitle>
-              <p className="text-sm text-gray-600">Comprehensive insights into party growth and member engagement</p>
+              <p className="text-xs md:text-sm text-gray-600">
+                Comprehensive insights into party growth and member engagement
+              </p>
             </div>
-            <div className="flex flex-col md:flex-row gap-2">
+            <div className="flex flex-col xs:flex-row gap-2 w-full lg:w-auto">
               <Select value={timeRange} onValueChange={setTimeRange}>
-                <SelectTrigger className="w-full md:w-40">
+                <SelectTrigger className="w-full lg:w-40 text-sm">
                   <SelectValue placeholder="Select range" />
                 </SelectTrigger>
                 <SelectContent>
@@ -136,13 +138,13 @@ export function AnalyticsDashboard({ leader }: AnalyticsDashboardProps) {
                   variant="outline"
                   size="sm"
                   disabled={refreshing}
-                  className="bg-transparent"
+                  className="bg-transparent flex-1 lg:flex-none text-xs"
                 >
-                  <RefreshCw className={`h-4 w-4 mr-1 ${refreshing ? "animate-spin" : ""}`} />
+                  <RefreshCw className={`h-3 w-3 md:h-4 md:w-4 mr-1 ${refreshing ? "animate-spin" : ""}`} />
                   Refresh
                 </Button>
-                <Button onClick={handleExport} variant="outline" size="sm" className="bg-transparent">
-                  <Download className="h-4 w-4 mr-1" />
+                <Button onClick={handleExport} variant="outline" size="sm" className="bg-transparent text-xs">
+                  <Download className="h-3 w-3 md:h-4 md:w-4 mr-1" />
                   Export
                 </Button>
               </div>
@@ -152,14 +154,14 @@ export function AnalyticsDashboard({ leader }: AnalyticsDashboardProps) {
       </Card>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
         <Card className="border-0 shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Total Members</CardTitle>
+            <CardTitle className="text-xs md:text-sm font-medium text-gray-600">Total Members</CardTitle>
             <Users className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl md:text-3xl font-bold text-gray-900">{analytics.totalMembers}</div>
+            <div className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900">{analytics.totalMembers}</div>
             <p className="text-xs text-green-600 mt-1 flex items-center">
               <TrendingUp className="h-3 w-3 mr-1" />+{analytics.monthlyGrowth}% this month
             </p>
@@ -168,11 +170,11 @@ export function AnalyticsDashboard({ leader }: AnalyticsDashboardProps) {
 
         <Card className="border-0 shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Active Members</CardTitle>
+            <CardTitle className="text-xs md:text-sm font-medium text-gray-600">Active Members</CardTitle>
             <UserCheck className="h-4 w-4 md:h-5 md:w-5 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl md:text-3xl font-bold text-green-600">{analytics.activeMembers}</div>
+            <div className="text-xl md:text-2xl lg:text-3xl font-bold text-green-600">{analytics.activeMembers}</div>
             <p className="text-xs text-gray-500 mt-1">
               {Math.round((analytics.activeMembers / analytics.totalMembers) * 100)}% of total
             </p>
@@ -181,49 +183,49 @@ export function AnalyticsDashboard({ leader }: AnalyticsDashboardProps) {
 
         <Card className="border-0 shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Pending Approval</CardTitle>
+            <CardTitle className="text-xs md:text-sm font-medium text-gray-600">Pending Approval</CardTitle>
             <Clock className="h-4 w-4 md:h-5 md:w-5 text-yellow-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl md:text-3xl font-bold text-yellow-600">{analytics.pendingMembers}</div>
+            <div className="text-xl md:text-2xl lg:text-3xl font-bold text-yellow-600">{analytics.pendingMembers}</div>
             <p className="text-xs text-gray-500 mt-1">Awaiting verification</p>
           </CardContent>
         </Card>
 
         <Card className="border-0 shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Total Leaders</CardTitle>
+            <CardTitle className="text-xs md:text-sm font-medium text-gray-600">Total Leaders</CardTitle>
             <Activity className="h-4 w-4 md:h-5 md:w-5 text-purple-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl md:text-3xl font-bold text-purple-600">{analytics.totalLeaders}</div>
+            <div className="text-xl md:text-2xl lg:text-3xl font-bold text-purple-600">{analytics.totalLeaders}</div>
             <p className="text-xs text-gray-500 mt-1">Active leadership</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Charts and Detailed Analytics */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6">
         {/* State Distribution */}
         <Card className="border-0 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-lg text-gray-900 flex items-center">
-              <MapPin className="h-5 w-5 mr-2 text-blue-600" />
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base md:text-lg text-gray-900 flex items-center">
+              <MapPin className="h-4 w-4 md:h-5 md:w-5 mr-2 text-blue-600" />
               State-wise Distribution
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-3 md:space-y-4">
               {analytics.stateDistribution.slice(0, 8).map((state, index) => (
                 <div key={state.state} className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-xs font-semibold text-blue-600">
+                  <div className="flex items-center space-x-2 md:space-x-3 min-w-0 flex-1">
+                    <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-blue-100 flex items-center justify-center text-xs font-semibold text-blue-600 flex-shrink-0">
                       {index + 1}
                     </div>
-                    <span className="font-medium text-gray-900">{state.state}</span>
+                    <span className="font-medium text-gray-900 text-sm md:text-base truncate">{state.state}</span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-20 bg-gray-200 rounded-full h-2">
+                  <div className="flex items-center space-x-2 md:space-x-3 flex-shrink-0">
+                    <div className="w-16 md:w-20 bg-gray-200 rounded-full h-2">
                       <div
                         className="bg-blue-600 h-2 rounded-full"
                         style={{
@@ -231,7 +233,9 @@ export function AnalyticsDashboard({ leader }: AnalyticsDashboardProps) {
                         }}
                       ></div>
                     </div>
-                    <span className="text-sm font-semibold text-gray-600 w-8">{state.count}</span>
+                    <span className="text-xs md:text-sm font-semibold text-gray-600 w-6 md:w-8 text-right">
+                      {state.count}
+                    </span>
                   </div>
                 </div>
               ))}
@@ -241,19 +245,19 @@ export function AnalyticsDashboard({ leader }: AnalyticsDashboardProps) {
 
         {/* Top Referrers */}
         <Card className="border-0 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-lg text-gray-900 flex items-center">
-              <TrendingUp className="h-5 w-5 mr-2 text-green-600" />
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base md:text-lg text-gray-900 flex items-center">
+              <TrendingUp className="h-4 w-4 md:h-5 md:w-5 mr-2 text-green-600" />
               Top Referrers
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-3 md:space-y-4">
               {analytics.topReferrers.slice(0, 6).map((referrer, index) => (
-                <div key={referrer.code} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
+                <div key={referrer.code} className="flex items-center justify-between p-2 md:p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-2 md:space-x-3 min-w-0 flex-1">
                     <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white ${
+                      className={`w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0 ${
                         index === 0
                           ? "bg-yellow-500"
                           : index === 1
@@ -265,13 +269,13 @@ export function AnalyticsDashboard({ leader }: AnalyticsDashboardProps) {
                     >
                       {index + 1}
                     </div>
-                    <div>
-                      <div className="font-medium text-gray-900">{referrer.name}</div>
-                      <div className="text-xs text-gray-500">Code: {referrer.code}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium text-gray-900 text-sm md:text-base truncate">{referrer.name}</div>
+                      <div className="text-xs text-gray-500 truncate">Code: {referrer.code}</div>
                     </div>
                   </div>
-                  <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                    {referrer.referrals} referrals
+                  <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs md:text-sm flex-shrink-0 ml-2">
+                    {referrer.referrals} ref
                   </Badge>
                 </div>
               ))}
@@ -282,26 +286,26 @@ export function AnalyticsDashboard({ leader }: AnalyticsDashboardProps) {
 
       {/* Membership Trends */}
       <Card className="border-0 shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-lg text-gray-900 flex items-center">
-            <Calendar className="h-5 w-5 mr-2 text-purple-600" />
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base md:text-lg text-gray-900 flex items-center">
+            <Calendar className="h-4 w-4 md:h-5 md:w-5 mr-2 text-purple-600" />
             Growth Trends
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="space-y-3 md:space-y-4">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
               {analytics.membershipTrends.slice(-4).map((trend, index) => (
-                <div key={trend.month} className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg">
-                  <div className="text-sm font-medium text-gray-600">{trend.month}</div>
+                <div key={trend.month} className="bg-gradient-to-r from-blue-50 to-purple-50 p-3 md:p-4 rounded-lg">
+                  <div className="text-xs md:text-sm font-medium text-gray-600 truncate">{trend.month}</div>
                   <div className="mt-2 space-y-1">
                     <div className="flex justify-between items-center">
                       <span className="text-xs text-gray-500">Members</span>
-                      <span className="text-sm font-bold text-blue-600">{trend.members}</span>
+                      <span className="text-xs md:text-sm font-bold text-blue-600">{trend.members}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-xs text-gray-500">Leaders</span>
-                      <span className="text-sm font-bold text-purple-600">{trend.leaders}</span>
+                      <span className="text-xs md:text-sm font-bold text-purple-600">{trend.leaders}</span>
                     </div>
                   </div>
                 </div>
@@ -313,18 +317,18 @@ export function AnalyticsDashboard({ leader }: AnalyticsDashboardProps) {
 
       {/* Recent Activity */}
       <Card className="border-0 shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-lg text-gray-900 flex items-center">
-            <Activity className="h-5 w-5 mr-2 text-orange-600" />
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base md:text-lg text-gray-900 flex items-center">
+            <Activity className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-600" />
             Recent Activity
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
+          <div className="space-y-2 md:space-y-3">
             {analytics.recentActivity.slice(0, 8).map((activity, index) => (
-              <div key={index} className="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors">
+              <div key={index} className="flex items-start space-x-2 md:space-x-3 p-2 md:p-3 hover:bg-gray-50 rounded-lg transition-colors">
                 <div
-                  className={`w-2 h-2 rounded-full mt-2 ${
+                  className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
                     activity.type === "member_join"
                       ? "bg-green-500"
                       : activity.type === "leader_add"
@@ -334,9 +338,11 @@ export function AnalyticsDashboard({ leader }: AnalyticsDashboardProps) {
                           : "bg-gray-500"
                   }`}
                 ></div>
-                <div className="flex-1">
-                  <p className="text-sm text-gray-900">{activity.description}</p>
-                  <p className="text-xs text-gray-500 mt-1">{new Date(activity.timestamp).toLocaleString("en-IN")}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs md:text-sm text-gray-900 leading-relaxed">{activity.description}</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {new Date(activity.timestamp).toLocaleString("en-IN")}
+                  </p>
                 </div>
               </div>
             ))}

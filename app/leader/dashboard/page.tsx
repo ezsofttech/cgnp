@@ -106,17 +106,17 @@ export default function LeaderDashboard() {
     <div className="min-h-screen bg-gray-50">
       <Header />
       <main className="py-4 md:py-8">
-        <div className="container mx-auto px-4">
-          {/* Header Section */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl md:rounded-2xl p-4 md:p-8 mb-6 md:mb-8 text-white shadow-xl">
-            <div className="flex flex-col md:flex-row justify-between items-start gap-4">
-              <div className="space-y-2">
-                <h1 className="text-2xl md:text-3xl font-bold">CG NP Leader Dashboard</h1>
-                <p className="text-blue-100 text-base md:text-lg">Welcome back, {leader?.name}</p>
-                <div className="flex flex-col md:flex-row md:items-center space-y-1 md:space-y-0 md:space-x-4 text-sm text-blue-200">
-                  <span className="flex items-center space-x-1">
-                    <Shield className="h-4 w-4" />
-                    <span>{leader?.position}</span>
+        <div className="container mx-auto px-3 sm:px-4">
+          {/* Header Section - Improved Mobile Responsiveness */}
+          <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl md:rounded-2xl p-4 md:p-8 mb-4 md:mb-8 text-white shadow-xl">
+            <div className="flex flex-col md:flex-row justify-between items-start gap-3 md:gap-4">
+              <div className="space-y-2 flex-1 min-w-0">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold truncate">CG NP Leader Dashboard</h1>
+                <p className="text-blue-100 text-sm sm:text-base md:text-lg truncate">Welcome back, {leader?.name}</p>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 md:gap-4 text-xs sm:text-sm text-blue-200 flex-wrap">
+                  <span className="flex items-center space-x-1 bg-blue-500/30 px-2 py-1 rounded-full">
+                    <Shield className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="truncate">{leader?.position}</span>
                   </span>
                   {isPartyAdmin && (
                     <span className="flex items-center space-x-1 bg-blue-500 px-2 py-1 rounded-full text-xs">
@@ -124,7 +124,7 @@ export default function LeaderDashboard() {
                       <span>Party Admin</span>
                     </span>
                   )}
-                  <span>Member since {leader?.joinedDate}</span>
+                  <span className="truncate">Member since {leader?.joinedDate}</span>
                   <span className="flex items-center space-x-1">
                     <span className="w-2 h-2 bg-green-400 rounded-full"></span>
                     <span>Active</span>
@@ -134,79 +134,79 @@ export default function LeaderDashboard() {
               <Button
                 onClick={handleLogout}
                 variant="outline"
-                className="bg-white/10 border-white/20 text-white hover:bg-white/20 w-full md:w-auto"
+                className="bg-white/10 border-white/20 text-white hover:bg-white/20 w-full md:w-auto mt-3 md:mt-0 text-sm"
+                size="sm"
               >
-                <LogOut className="h-4 w-4 mr-2" />
+                <LogOut className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                 Logout
               </Button>
             </div>
           </div>
 
-          {/* Dashboard Tabs */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="flex justify-around w-full bg-white shadow-sm">
+          {/* Dashboard Tabs - Improved Mobile Responsiveness */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
+            <TabsList className="grid grid-cols-3 sm:flex sm:justify-around w-full bg-white shadow-sm p-1 gap-1 overflow-x-auto">
               {hasAnalyticsPermission && (
-                <TabsTrigger value="analytics" className="text-xs md:text-sm">
-                  <BarChart3 className="h-4 w-4 mr-1 md:mr-2" />
-                  <span className="hidden sm:inline">Analytics</span>
-                  <span className="sm:hidden">Charts</span>
+                <TabsTrigger value="analytics" className="text-xs p-2 h-auto min-h-[40px]">
+                  <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                  <span className="hidden xs:inline">Analytics</span>
+                  <span className="xs:hidden">Analytics</span>
                 </TabsTrigger>
               )}
               
-              <TabsTrigger value="leaders" className="text-xs md:text-sm">
-                <Shield className="h-4 w-4 mr-1 md:mr-2" />
-                <span className="hidden sm:inline">Leaders</span>
-                <span className="sm:hidden">Leaders</span>
+              <TabsTrigger value="leaders" className="text-xs p-2 h-auto min-h-[40px]">
+                <Shield className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                <span>Leaders</span>
               </TabsTrigger>
               
-              <TabsTrigger value="members" className="text-xs md:text-sm">
-                <Users className="h-4 w-4 mr-1 md:mr-2" />
-                <span className="hidden sm:inline">Members</span>
-                <span className="sm:hidden">Members</span>
+              <TabsTrigger value="members" className="text-xs p-2 h-auto min-h-[40px]">
+                <Users className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                <span>Members</span>
               </TabsTrigger>
               
-              <TabsTrigger value="referral" className="text-xs md:text-sm">
-                <LinkIcon className="h-4 w-4 mr-1 md:mr-2" />
-                <span className="hidden sm:inline">Referral</span>
-                <span className="sm:hidden">Refer</span>
+              <TabsTrigger value="referral" className="text-xs p-2 h-auto min-h-[40px]">
+                <LinkIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                <span className="hidden xs:inline">Referral</span>
+                <span className="xs:hidden">Refer</span>
               </TabsTrigger>
 
               {/* New Party Admin Tab */}
               {isPartyAdmin && (
-                <TabsTrigger value="admin" className="text-xs md:text-sm">
-                  <Settings className="h-4 w-4 mr-1 md:mr-2" />
-                  <span className="hidden sm:inline">Member Database</span>
-                  <span className="sm:hidden">Member Database</span>
+                <TabsTrigger value="admin" className="text-xs p-2 h-auto min-h-[40px]">
+                  <Settings className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                  <span className="hidden sm:inline">Database</span>
+                  <span className="sm:hidden">DB</span>
                 </TabsTrigger>
               )}
 
               {hasAdminAccess && (
-                <TabsTrigger value="setting" className="text-xs md:text-sm">
-                  <BarChart3 className="h-4 w-4 mr-1 md:mr-2" />
-                  <span className="hidden sm:inline">Setting</span>
-                  <span className="sm:hidden">Party Info</span>
+                <TabsTrigger value="setting" className="text-xs p-2 h-auto min-h-[40px]">
+                  <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                  <span className="hidden sm:inline">Party Info</span>
+                  <span className="sm:hidden">Info</span>
                 </TabsTrigger>
               )}
             </TabsList>
 
-            <TabsContent value="overview" className="space-y-6">
+            <TabsContent value="overview" className="space-y-4 md:space-y-6">
               <DashboardStats leader={leader} members={leaderMembers} />
 
-              {/* Quick Actions */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+              {/* Quick Actions - Improved Mobile Layout */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
                 <Card className="border-0 shadow-lg">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-lg text-gray-900 flex items-center">
-                      <UserPlus className="h-5 w-5 mr-2 text-blue-600" />
+                    <CardTitle className="text-base md:text-lg text-gray-900 flex items-center">
+                      <UserPlus className="h-4 w-4 md:h-5 md:w-5 mr-2 text-blue-600" />
                       Quick Add Member
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <Button
                       onClick={() => setShowAddMember(!showAddMember)}
-                      className="w-full bg-blue-600 hover:bg-blue-700"
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-sm"
+                      size="sm"
                     >
-                      <Plus className="h-4 w-4 mr-2" />
+                      <Plus className="h-3 w-3 md:h-4 md:w-4 mr-2" />
                       Add New Member
                     </Button>
                     {showAddMember && (
@@ -219,21 +219,26 @@ export default function LeaderDashboard() {
 
                 <Card className="border-0 shadow-lg">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-lg text-gray-900 flex items-center">
-                      <LinkIcon className="h-5 w-5 mr-2 text-blue-600" />
+                    <CardTitle className="text-base md:text-lg text-gray-900 flex items-center">
+                      <LinkIcon className="h-4 w-4 md:h-5 md:w-5 mr-2 text-blue-600" />
                       Share Referral
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    <div className="flex space-x-2">
-                      <Input value={referralLink} readOnly className="flex-1 bg-gray-50 text-xs md:text-sm" />
+                    <div className="flex flex-col xs:flex-row gap-2 xs:space-x-2">
+                      <Input 
+                        value={referralLink} 
+                        readOnly 
+                        className="flex-1 bg-gray-50 text-xs md:text-sm min-w-0" 
+                      />
                       <Button
                         onClick={handleCopyLink}
                         variant="outline"
-                        className="border-blue-600 text-blue-600 hover:bg-blue-50 bg-transparent px-3"
+                        className="border-blue-600 text-blue-600 hover:bg-blue-50 bg-transparent px-3 text-sm whitespace-nowrap"
+                        size="sm"
                       >
-                        <Copy className="h-4 w-4" />
-                        <span className="hidden md:inline ml-1">{copied ? "Copied!" : "Copy"}</span>
+                        <Copy className="h-3 w-3 md:h-4 md:w-4" />
+                        <span className="ml-1">{copied ? "Copied!" : "Copy"}</span>
                       </Button>
                     </div>
                     <p className="text-xs text-gray-500">Share this link to invite people to join AAP</p>
@@ -263,44 +268,45 @@ export default function LeaderDashboard() {
               </TabsContent>
             )}
 
-            <TabsContent value="referral" className="space-y-6">
+            <TabsContent value="referral" className="space-y-4 md:space-y-6">
               <Card className="border-0 shadow-lg">
                 <CardHeader>
-                  <CardTitle className="text-xl text-gray-900">Referral Management</CardTitle>
-                  <p className="text-sm text-gray-600">Manage your referral link and track your referral performance</p>
+                  <CardTitle className="text-lg md:text-xl text-gray-900">Referral Management</CardTitle>
+                  <p className="text-xs md:text-sm text-gray-600">Manage your referral link and track your referral performance</p>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-blue-50 p-4 rounded-lg text-center">
-                      <div className="text-2xl font-bold text-blue-600">{leader?.referralCode}</div>
-                      <div className="text-sm text-blue-700">Your Code</div>
+                <CardContent className="space-y-4 md:space-y-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
+                    <div className="bg-blue-50 p-3 md:p-4 rounded-lg text-center">
+                      <div className="text-xl md:text-2xl font-bold text-blue-600 truncate">{leader?.referralCode}</div>
+                      <div className="text-xs md:text-sm text-blue-700">Your Code</div>
                     </div>
-                    <div className="bg-green-50 p-4 rounded-lg text-center">
-                      <div className="text-2xl font-bold text-green-600">{leaderMembers?.length}</div>
-                      <div className="text-sm text-green-700">Total Referrals</div>
+                    <div className="bg-green-50 p-3 md:p-4 rounded-lg text-center">
+                      <div className="text-xl md:text-2xl font-bold text-green-600">{leaderMembers?.length}</div>
+                      <div className="text-xs md:text-sm text-green-700">Total Referrals</div>
                     </div>
-                    <div className="bg-yellow-50 p-4 rounded-lg text-center">
-                      <div className="text-2xl font-bold text-yellow-600">
+                    <div className="bg-yellow-50 p-3 md:p-4 rounded-lg text-center">
+                      <div className="text-xl md:text-2xl font-bold text-yellow-600">
                         {leaderMembers?.filter((m) => m.status === "active").length}
                       </div>
-                      <div className="text-sm text-yellow-700">Active Members</div>
+                      <div className="text-xs md:text-sm text-yellow-700">Active Members</div>
                     </div>
                   </div>
 
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-gray-900">Share Your Referral Link</h3>
-                    <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2">
-                      <Input value={referralLink} readOnly className="flex-1 bg-gray-50" />
+                  <div className="space-y-3 md:space-y-4">
+                    <h3 className="font-semibold text-gray-900 text-base md:text-lg">Share Your Referral Link</h3>
+                    <div className="flex flex-col sm:flex-row gap-2 sm:space-x-2">
+                      <Input value={referralLink} readOnly className="flex-1 bg-gray-50 text-xs md:text-sm" />
                       <Button
                         onClick={handleCopyLink}
                         variant="outline"
-                        className="border-blue-600 text-blue-600 hover:bg-blue-50 bg-transparent"
+                        className="border-blue-600 text-blue-600 hover:bg-blue-50 bg-transparent text-sm whitespace-nowrap"
+                        size="sm"
                       >
-                        <Copy className="h-4 w-4 mr-2" />
+                        <Copy className="h-3 w-3 md:h-4 md:w-4 mr-2" />
                         {copied ? "Copied!" : "Copy Link"}
                       </Button>
                     </div>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-xs md:text-sm text-gray-500">
                       Share this link on social media, WhatsApp, or email to invite people to join AAP through your
                       referral
                     </p>
@@ -308,78 +314,6 @@ export default function LeaderDashboard() {
                 </CardContent>
               </Card>
             </TabsContent>
-
-            {/* New Party Admin Tab Content */}
-            {/* {isPartyAdmin && (
-              <TabsContent value="admin">
-                <Card className="border-0 shadow-lg">
-                  <CardHeader>
-                    <CardTitle className="text-xl text-gray-900 flex items-center">
-                      <Settings className="h-5 w-5 mr-2 text-blue-600" />
-                      Party Administration
-                    </CardTitle>
-                    <p className="text-sm text-gray-600">Manage party-wide settings and configurations</p>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <Card className="border border-gray-200">
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-lg">System Settings</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <p className="text-sm text-gray-600 mb-4">Configure party-wide system settings</p>
-                          <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                            Manage Settings
-                          </Button>
-                        </CardContent>
-                      </Card>
-
-                      <Card className="border border-gray-200">
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-lg">User Management</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <p className="text-sm text-gray-600 mb-4">Manage all users and permissions</p>
-                          <Button variant="outline" className="w-full">
-                            View All Users
-                          </Button>
-                        </CardContent>
-                      </Card>
-
-                      <Card className="border border-gray-200">
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-lg">Reports</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <p className="text-sm text-gray-600 mb-4">Generate party-wide reports</p>
-                          <Button variant="outline" className="w-full">
-                            Generate Reports
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    </div>
-
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <h3 className="font-semibold text-gray-900 mb-2">Quick Actions</h3>
-                      <div className="flex flex-wrap gap-2">
-                        <Button variant="outline" size="sm">
-                          Backup Data
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          System Logs
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          Audit Trail
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          Export Data
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            )} */}
 
             <TabsContent value="setting">
               <PartyInfoForm initialData={initialData} />

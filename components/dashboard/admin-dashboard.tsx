@@ -739,20 +739,20 @@ export function AdminDashboard() {
   const stats = getUserStats()
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4 sm:p-6">
       <Card className="border-0 shadow-lg">
         <CardHeader>
-          <div className="flex flex-col md:flex-row md:items-center justify-between">
-            <div>
-              <CardTitle className="text-xl text-gray-900 flex items-center">
-                <Settings className="h-5 w-5 mr-2 text-blue-600" />
-                Party Administration - Member Database
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <CardTitle className="text-xl sm:text-2xl text-gray-900 flex items-center flex-wrap gap-2">
+                <Settings className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 flex-shrink-0" />
+                <span className="truncate">Party Administration - Member Database</span>
               </CardTitle>
-              <p className="text-sm text-gray-600">Manage all party members and their details</p>
+              <p className="text-sm text-gray-600 mt-1">Manage all party members and their details</p>
             </div>
             <Button 
               onClick={handleAddNew} 
-              className="mt-4 md:mt-0 flex items-center gap-2"
+              className="w-full lg:w-auto flex items-center gap-2 justify-center"
               disabled={isLoading}
             >
               <Plus className="h-4 w-4" />
@@ -761,135 +761,208 @@ export function AdminDashboard() {
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-        
-
           {/* Search and Filter Section */}
-          <div className="flex flex-col md:flex-row gap-4 justify-between">
-            <div className="flex-1 max-w-md">
+          <div className="flex flex-col sm:flex-row gap-4 justify-between">
+            <div className="flex-1 max-w-full sm:max-w-md">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   placeholder="Search by name, contact, city or state..."
                   value={filters.search || ""}
                   onChange={(e) => handleSearch(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 w-full"
                 />
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-col xs:flex-row gap-2 w-full sm:w-auto">
               <Button 
                 variant="outline" 
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 justify-center flex-1 sm:flex-none"
                 onClick={handleImportClick}
               >
                 <Upload className="h-4 w-4" />
-                Import from Excel
+                <span className="hidden xs:inline">Import</span>
               </Button>
               <Button 
                 variant="outline" 
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 justify-center flex-1 sm:flex-none"
                 onClick={handleExport}
                 disabled={isExporting}
               >
                 <Download className="h-4 w-4" />
-                {isExporting ? "Exporting..." : "Export to Excel"}
+                <span className="hidden xs:inline">{isExporting ? "Exporting..." : "Export"}</span>
               </Button>
             </div>
           </div>
 
-          {/* Users Table */}
-          <div className="border rounded-lg overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Name
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Contact No.
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      City
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      State
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Category
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {users.map((user) => (
-                    <tr key={user._id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
-                            <User className="h-5 w-5 text-blue-600" />
-                          </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                            <div className="text-sm text-gray-500">{user.membershipId}</div>
-                          </div>
+          {/* Mobile Card View */}
+          <div className="lg:hidden space-y-4">
+            {users.map((user) => (
+              <Card key={user._id} className="border border-gray-200">
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center mb-2">
+                        <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                          <User className="h-5 w-5 text-blue-600" />
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 flex items-center gap-1">
-                          <Phone className="h-4 w-4 text-gray-400" />
-                          {user.contactNo}
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-semibold text-gray-900 truncate">{user.name}</h3>
+                          <p className="text-sm text-gray-500 truncate">{user.membershipId}</p>
+                        </div>
+                      </div>
+                      <div className="space-y-1 text-sm text-gray-600">
+                        <div className="flex items-center">
+                          <Phone className="h-4 w-4 mr-2 flex-shrink-0" />
+                          <span className="truncate">{user.contactNo}</span>
                         </div>
                         {user.mobileNumber && (
-                          <div className="text-sm text-gray-500">{user.mobileNumber}</div>
+                          <div className="flex items-center">
+                            <span className="ml-6 text-gray-500 truncate">{user.mobileNumber}</span>
+                          </div>
                         )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 flex items-center gap-1">
-                          <MapPin className="h-4 w-4 text-gray-400" />
-                          {user.city}
+                        <div className="flex items-center">
+                          <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
+                          <span className="truncate">{user.city}, {user.district}</span>
                         </div>
-                        <div className="text-sm text-gray-500">{user.district}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{user.state}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{user.category}</div>
-                      </td>
-                      
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleViewDetails(user)}>
-                              <Eye className="h-4 w-4 mr-2" />
-                              View Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleEdit(user)}>
-                              <Edit className="h-4 w-4 mr-2" />
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => handleDelete(user)}
-                              className="text-red-600 focus:text-red-600"
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </td>
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-500">{user.state}</span>
+                          <Badge variant="secondary" className="ml-2">{user.category}</Badge>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 mt-4">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1 bg-transparent"
+                      onClick={() => handleViewDetails(user)}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1 bg-transparent"
+                      onClick={() => handleEdit(user)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 text-red-600 hover:text-red-700 bg-transparent"
+                      onClick={() => handleDelete(user)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden lg:block">
+            <div className="border rounded-lg overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                        Name
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                        Contact No.
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                        City
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                        State
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                        Category
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                        Actions
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {users.map((user) => (
+                      <tr key={user._id} className="hover:bg-gray-50">
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
+                              <User className="h-5 w-5 text-blue-600" />
+                            </div>
+                            <div className="ml-4 min-w-0">
+                              <div className="text-sm font-medium text-gray-900 truncate max-w-[200px]">{user.name}</div>
+                              <div className="text-sm text-gray-500 truncate max-w-[200px]">{user.membershipId}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900 flex items-center gap-1">
+                            <Phone className="h-4 w-4 text-gray-400" />
+                            {user.contactNo}
+                          </div>
+                          {user.mobileNumber && (
+                            <div className="text-sm text-gray-500">{user.mobileNumber}</div>
+                          )}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900 flex items-center gap-1">
+                            <MapPin className="h-4 w-4 text-gray-400" />
+                            {user.city}
+                          </div>
+                          <div className="text-sm text-gray-500">{user.district}</div>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{user.state}</div>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            <Badge variant="secondary">{user.category}</Badge>
+                          </div>
+                        </td>
+                        
+                        <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex space-x-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleViewDetails(user)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleEdit(user)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-red-600 hover:text-red-700 bg-transparent"
+                              onClick={() => handleDelete(user)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
 
@@ -919,18 +992,18 @@ export function AdminDashboard() {
 
       {/* User Details Modal */}
       {showDetails && selectedUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
           <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <CardHeader>
-              <CardTitle className="flex justify-between items-center">
-                <span>User Details - {selectedUser.name}</span>
-                <Button variant="ghost" size="sm" onClick={handleCloseDetails}>
+            <CardHeader className="sticky top-0 bg-white z-10 border-b">
+              <CardTitle className="flex justify-between items-center flex-wrap gap-2">
+                <span className="text-lg sm:text-xl truncate flex-1">User Details - {selectedUser.name}</span>
+                <Button variant="ghost" size="sm" onClick={handleCloseDetails} className="flex-shrink-0">
                   <X className="h-4 w-4" />
                 </Button>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CardContent className="space-y-4 p-4 sm:p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm font-medium text-gray-500">Full Name</Label>
                   <div className="text-sm text-gray-900 mt-1">{selectedUser.name}</div>
@@ -947,7 +1020,7 @@ export function AdminDashboard() {
                   <Label className="text-sm font-medium text-gray-500">Gender</Label>
                   <div className="text-sm text-gray-900 mt-1 capitalize">{selectedUser.gender || "Not specified"}</div>
                 </div>
-                <div>
+                <div className="sm:col-span-2">
                   <Label className="text-sm font-medium text-gray-500">Address</Label>
                   <div className="text-sm text-gray-900 mt-1">{selectedUser.address}</div>
                 </div>
@@ -1010,14 +1083,14 @@ export function AdminDashboard() {
                   {selectedUser.remarks || "No remarks"}
                 </div>
               </div>
-              <div className="flex justify-end gap-2 pt-4">
-                <Button variant="outline" onClick={handleCloseDetails}>
+              <div className="flex flex-col sm:flex-row justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={handleCloseDetails} className="w-full sm:w-auto">
                   Close
                 </Button>
                 <Button onClick={() => {
                   handleCloseDetails()
                   handleEdit(selectedUser)
-                }}>
+                }} className="w-full sm:w-auto">
                   Edit Details
                 </Button>
               </div>
@@ -1028,17 +1101,17 @@ export function AdminDashboard() {
 
       {/* Add/Edit User Modal */}
       {(showAddModal || showEditModal) && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
           <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <CardHeader>
-              <CardTitle className="flex justify-between items-center">
-                <span>{showAddModal ? 'Add New User' : 'Edit User'}</span>
-                <Button variant="ghost" size="sm" onClick={() => showAddModal ? setShowAddModal(false) : setShowEditModal(false)}>
+            <CardHeader className="sticky top-0 bg-white z-10 border-b">
+              <CardTitle className="flex justify-between items-center flex-wrap gap-2">
+                <span className="text-lg sm:text-xl">{showAddModal ? 'Add New User' : 'Edit User'}</span>
+                <Button variant="ghost" size="sm" onClick={() => showAddModal ? setShowAddModal(false) : setShowEditModal(false)} className="flex-shrink-0">
                   <X className="h-4 w-4" />
                 </Button>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 p-4 sm:p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Name */}
                 <div className="space-y-2">
@@ -1094,7 +1167,7 @@ export function AdminDashboard() {
                 </div>
 
                 {/* Address */}
-                <div className="space-y-2">
+                <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="address">Address *</Label>
                   <Input
                     id="address"
@@ -1275,13 +1348,13 @@ export function AdminDashboard() {
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-4">
-                <Button variant="outline" onClick={() => showAddModal ? setShowAddModal(false) : setShowEditModal(false)}>
+              <div className="flex flex-col sm:flex-row justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => showAddModal ? setShowAddModal(false) : setShowEditModal(false)} className="w-full sm:w-auto">
                   Cancel
                 </Button>
                 <Button 
                   onClick={() => handleSave(showEditModal)} 
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 w-full sm:w-auto justify-center"
                   disabled={isLoading}
                 >
                   <Save className="h-4 w-4" />
@@ -1295,17 +1368,17 @@ export function AdminDashboard() {
 
       {/* Import from Excel Modal */}
       {showImportModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
           <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <CardHeader>
-              <CardTitle className="flex justify-between items-center">
-                <span>Import Users from Excel</span>
-                <Button variant="ghost" size="sm" onClick={() => setShowImportModal(false)}>
+            <CardHeader className="sticky top-0 bg-white z-10 border-b">
+              <CardTitle className="flex justify-between items-center flex-wrap gap-2">
+                <span className="text-lg sm:text-xl">Import Users from Excel</span>
+                <Button variant="ghost" size="sm" onClick={() => setShowImportModal(false)} className="flex-shrink-0">
                   <X className="h-4 w-4" />
                 </Button>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 p-4 sm:p-6">
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="import-file">Select Excel or CSV File</Label>
@@ -1323,14 +1396,14 @@ export function AdminDashboard() {
 
                 {importFile && (
                   <div className="p-4 border rounded-lg bg-gray-50">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">{importFile.name}</p>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{importFile.name}</p>
                         <p className="text-sm text-gray-500">
                           {(importFile.size / 1024 / 1024).toFixed(2)} MB
                         </p>
                       </div>
-                      <Badge variant="secondary">Ready to import</Badge>
+                      <Badge variant="secondary" className="self-start sm:self-center">Ready to import</Badge>
                     </div>
                   </div>
                 )}
@@ -1340,22 +1413,22 @@ export function AdminDashboard() {
                     <Label>Preview ({importPreview.length} records)</Label>
                     <div className="border rounded-lg overflow-hidden">
                       <div className="overflow-x-auto">
-                        <table className="w-full">
+                        <table className="w-full min-w-[600px]">
                           <thead className="bg-gray-50">
                             <tr>
-                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">
                                 Name
                               </th>
-                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">
                                 Contact No
                               </th>
-                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">
                                 City
                               </th>
-                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">
                                 State
                               </th>
-                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">
                                 Status
                               </th>
                             </tr>
@@ -1363,11 +1436,11 @@ export function AdminDashboard() {
                           <tbody className="bg-white divide-y divide-gray-200">
                             {importPreview.map((user, index) => (
                               <tr key={user._id}>
-                                <td className="px-4 py-2 text-sm">{user.name}</td>
-                                <td className="px-4 py-2 text-sm">{user.contactNo}</td>
-                                <td className="px-4 py-2 text-sm">{user.city}</td>
-                                <td className="px-4 py-2 text-sm">{user.state}</td>
-                                <td className="px-4 py-2 text-sm">
+                                <td className="px-3 py-2 text-sm whitespace-nowrap">{user.name}</td>
+                                <td className="px-3 py-2 text-sm whitespace-nowrap">{user.contactNo}</td>
+                                <td className="px-3 py-2 text-sm whitespace-nowrap">{user.city}</td>
+                                <td className="px-3 py-2 text-sm whitespace-nowrap">{user.state}</td>
+                                <td className="px-3 py-2 text-sm whitespace-nowrap">
                                   <Badge 
                                     variant="outline" 
                                     className={user.isValid ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}
@@ -1388,13 +1461,13 @@ export function AdminDashboard() {
                 )}
               </div>
 
-              <div className="flex justify-end gap-2 pt-4">
-                <Button variant="outline" onClick={() => setShowImportModal(false)}>
+              <div className="flex flex-col sm:flex-row justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => setShowImportModal(false)} className="w-full sm:w-auto">
                   Cancel
                 </Button>
                 <Button 
                   onClick={handleImport} 
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 w-full sm:w-auto justify-center"
                   disabled={!importFile || isImporting}
                 >
                   <Upload className="h-4 w-4" />
@@ -1409,7 +1482,7 @@ export function AdminDashboard() {
       {/* Delete Confirmation Modal */}
       {showDeleteModal && userToDelete && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <Card className="w-full max-w-md">
+          <Card className="w-full max-w-md mx-4">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-red-600">
                 <Trash2 className="h-5 w-5" />
@@ -1419,11 +1492,11 @@ export function AdminDashboard() {
             <CardContent>
               <p>Are you sure you want to delete <strong>{userToDelete.name}</strong>? This action cannot be undone.</p>
             </CardContent>
-            <CardContent className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowDeleteModal(false)}>
+            <CardContent className="flex flex-col sm:flex-row justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowDeleteModal(false)} className="w-full sm:w-auto">
                 Cancel
               </Button>
-              <Button variant="destructive" onClick={confirmDelete} disabled={isLoading}>
+              <Button variant="destructive" onClick={confirmDelete} disabled={isLoading} className="w-full sm:w-auto">
                 {isLoading ? "Deleting..." : "Delete"}
               </Button>
             </CardContent>
