@@ -102,6 +102,7 @@ interface PartyState {
   fetchMembers: (refferalCode?: string) => Promise<void>
   fetchPartyInfo: () => Promise<void>
   addMember: (memberData: any) => Promise<{ success: boolean; error?: string }>
+  deleteMember: (memberId: string) => Promise<{ success: boolean; error?: string }>
   generateReferralLink: (refferalCode: string) => string
   getReferralLink: (refferalCode: string, forceRefresh?: boolean) => Promise<ReferralLinkResponse>
   getReferralLinkByLeaderId: (leaderId: string) => Promise<ReferralLinkResponse>
@@ -191,6 +192,35 @@ export const usePartyStore = create<PartyState>((set, get) => ({
         return { success: false, error: data.error }
       }
     } catch {
+      return { success: false, error: "Network error" }
+    }
+  },
+
+  deleteMember: async (memberId) => {
+    try {
+      // Option 1: Using query parameter
+      const response = await authFetch(`/api/members?id=${memberId}`, {
+        method: "DELETE",
+      })
+
+      // Option 2: If you prefer request body instead
+      // const response = await authFetch("/api/members", {
+      //   method: "DELETE",
+      //   body: JSON.stringify({ id: memberId }),
+      // })
+
+      const data = await response.json()
+      if (response.ok) {
+        // Remove the deleted member from local state
+        set((state) => ({
+          members: state.members.filter((member) => member._id !== memberId)
+        }))
+        return { success: true }
+      } else {
+        return { success: false, error: data.error || "Failed to delete member" }
+      }
+    } catch (error) {
+      console.error("Error deleting member:", error)
       return { success: false, error: "Network error" }
     }
   },

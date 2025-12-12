@@ -1,5 +1,3 @@
-
-
 import { type NextRequest, NextResponse } from "next/server"
 import dbConnect from "@/lib/mongodb"
 import Member from "@/lib/models/Member"
@@ -127,7 +125,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-
 export async function POST(request: NextRequest) {
   try {
     await dbConnect()
@@ -160,15 +157,118 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error("Create member error:", error)
 
-    // if (error.code === 11000) {
-    //   return NextResponse.json({ error: "Email already exists" }, { status: 400 })
-    // }
-
     if (error.name === "ValidationError") {
       const errors = Object.values(error.errors).map((err: any) => err.message)
       return NextResponse.json({ error: "Validation error", details: errors }, { status: 400 })
     }
 
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    await dbConnect();
+
+    // 🧩 Step 1: Get token from cookies or headers
+    const token =
+      request.cookies.get("auth-token")?.value ||
+      request.headers.get("authorization")?.replace("Bearer ", "");
+
+    if (!token) {
+      return NextResponse.json(
+        { error: "Unauthorized: No token provided" },
+        { status: 401 }
+      );
+    }
+
+    // 🧩 Step 2: Decode token to get leaderId and role
+    let decoded: any;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET||"R4jP7nYjLwVg2Q0XH2xF0m3pPnlZ5a6yYF8vHtR8b+vOaL1+5KwTgRztUjJZr1Y9");
+    } catch (err) {
+      return NextResponse.json(
+        { error: "Invalid or expired token" },
+        { status: 401 }
+      );
+    }
+
+    const leaderId = decoded.leaderId;
+    const leader = await Leader.findById(leaderId);
+    if (!leader) {
+      return NextResponse.json(
+        { error: "Leader not found" },
+        { status: 404 }
+      );
+    }
+
+    const { role } = leader;
+
+    // 🧩 Step 3: Get member ID from URL or request body
+    const { searchParams } = new URL(request.url);
+    let memberId = searchParams.get("id");
+    
+    // If not in query params, try to get from request body
+    if (!memberId) {
+      try {
+        const body = await request.json();
+        memberId = body.id;
+      } catch {
+        // If no body or invalid JSON, continue with null memberId
+      }
+    }
+
+    if (!memberId) {
+      return NextResponse.json(
+        { error: "Member ID is required" },
+        { status: 400 }
+      );
+    }
+
+    // 🧩 Step 4: Find the member
+    const member = await Member.findById(memberId);
+    if (!member) {
+      return NextResponse.json(
+        { error: "Member not found" },
+        { status: 404 }
+      );
+    }
+
+    // 🧩 Step 5: Check permission based on role
+    // Only party_admin can delete any member
+    // Other leaders can only delete members they referred
+    if (role !== "party_admin") {
+      if (member.referredBy.toString() !== leaderId.toString()) {
+        return NextResponse.json(
+          { error: "You can only delete members you referred" },
+          { status: 403 }
+        );
+      }
+    }
+
+    // 🧩 Step 6: Delete the member
+    await Member.findByIdAndDelete(memberId);
+
+    return NextResponse.json(
+      {
+        message: "Member deleted successfully",
+        deletedMemberId: memberId,
+      },
+      { status: 200 }
+    );
+  } catch (error: any) {
+    console.error("Delete member error:", error);
+
+    if (error.name === "CastError") {
+      return NextResponse.json(
+        { error: "Invalid member ID format" },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }

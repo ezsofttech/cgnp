@@ -16,7 +16,7 @@ export default function LeaderLoginPage() {
                 </svg>
               </div>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold">CG NP Leader Portal</h1>
+            <h1 className="text-4xl md:text-5xl font-bold">JC BP Leader Portal</h1>
             <p className="text-xl text-aap-blue-100 max-w-3xl mx-auto leading-relaxed">
              Step into your leader hub to organize your team, monitor progress, and help us build a more transparent government.
             </p>

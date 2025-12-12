@@ -111,7 +111,7 @@ export default function LeaderDashboard() {
           <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl md:rounded-2xl p-4 md:p-8 mb-4 md:mb-8 text-white shadow-xl">
             <div className="flex flex-col md:flex-row justify-between items-start gap-3 md:gap-4">
               <div className="space-y-2 flex-1 min-w-0">
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold truncate">CG NP Leader Dashboard</h1>
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold truncate">JCBP Leader Dashboard</h1>
                 <p className="text-blue-100 text-sm sm:text-base md:text-lg truncate">Welcome back, {leader?.name}</p>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 md:gap-4 text-xs sm:text-sm text-blue-200 flex-wrap">
                   <span className="flex items-center space-x-1 bg-blue-500/30 px-2 py-1 rounded-full">
@@ -329,7 +329,7 @@ export default function LeaderDashboard() {
             </Button>
           </div>
           <p className="text-xs md:text-sm text-gray-500">
-            Share this link on social media, WhatsApp, or email to invite people to join AAP through your
+            Share this link on social media, WhatsApp, or email to invite people to join JC BP through your
             referral
           </p>
         </div>

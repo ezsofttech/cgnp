@@ -5,18 +5,18 @@ import './globals.css'
 
  export const metadata: Metadata = {
   title: {
-    default: 'Chhattisgarh New Party',
-    template: '%s | Chhattisgarh New Party',
+    default: 'Jan Bharat Chetna Party',
+    template: '%s | Jan Bharat Chetna Party',
   },
-  description: 'Official website of Chhattisgarh New Party – Voice of the Common People.',
+  description: 'Official website of Jan Bharat Chetna Party – Voice of the Common People.',
   generator: 'v0.dev',
-  applicationName: 'Chhattisgarh New Party',
-  metadataBase: new URL('https://aamjantaparty.com'), // Replace with your actual domain
+  applicationName: 'Jan Bharat Chetna Party',
+  //metadataBase: new URL('https://aamjantaparty.com'), // Replace with your actual domain
   openGraph: {
-    title: 'Chhattisgarh New Party',
+    title: 'Jan Bharat Chetna Party',
     description: 'Join the movement that puts people first. Stay informed, get involved.',
-    url: 'https://aamjantaparty.com', // Replace with your actual domain
-    siteName: 'Chhattisgarh New Party',
+   // url: 'https://aamjantaparty.com', // Replace with your actual domain
+    siteName: 'Jan Bharat Chetna Party',
     locale: 'en_IN',
     type: 'website',
   },

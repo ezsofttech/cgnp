@@ -205,11 +205,24 @@ MemberSchema.pre("save", async function (next) {
   }
 
   // Generate membership ID if not provided
-  if (!this.membershipId) {
-    const year = new Date().getFullYear()
-    const count = await mongoose.models.Member.countDocuments()
-    this.membershipId = `CGNP${year}${String(count + 100).padStart(6, "0")}`
+if (!this.membershipId) {
+  const year = new Date().getFullYear();
+
+  const lastMember = await mongoose.models.Member
+    .findOne({})
+    .sort({ createdAt: -1 }) // latest member
+    .select("membershipId");
+
+  let nextNumber = 200;
+
+  if (lastMember) {
+    const lastDigits = parseInt(lastMember.membershipId.slice(-6));
+    nextNumber = lastDigits + 1;
   }
+
+  this.membershipId = `CGNP${year}${String(nextNumber).padStart(6, "0")}`;
+}
+
 
   // Generate referral code if not provided
   if (!this.referralCode) {

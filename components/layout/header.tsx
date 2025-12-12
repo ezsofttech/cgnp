@@ -12,8 +12,8 @@ export function Header() {
               <Zap className="h-6 w-6 text-white" />
             </div>
             <div className="flex flex-col">
-              <span className="text-xl font-bold text-blue-600">CG NP</span>
-              <span className="text-sm text-gray-600 hidden sm:block">Chhattisgarh New Party</span>
+              <span className="text-xl font-bold text-blue-600">JCBP</span>
+              <span className="text-sm text-gray-600 hidden sm:block">जन चेतना भारत पार्टी</span>
             </div>
           </Link>
 
@@ -34,7 +34,7 @@ export function Header() {
 
           <div className="flex items-center space-x-3">
             <Button asChild variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50 bg-transparent">
-              <Link href="/join">Join CG NP</Link>
+              <Link href="/join">Join JCBP</Link>
             </Button>
             <Button asChild className="bg-blue-600 hover:bg-blue-700">
               <Link href="/leader/login">Leader Portal</Link>

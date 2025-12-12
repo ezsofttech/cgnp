@@ -159,7 +159,7 @@ const constituencyData = {
 const content = {
   en: {
     title: "Member Registration",
-    welcome: "Welcome to CG NP Party",
+    welcome: "Welcome to JC BP Party",
     steps: ["Personal Info", "Location", "Additional Info", "Confirmation"],
     memberType: "Member Type",
     memberOptions: ["Existing Member", "New Member"],
@@ -206,7 +206,7 @@ const content = {
   },
   hi: {
     title: "सदस्य पंजीकरण",
-    welcome: "छत्तीसगढ़ न्यू पार्टी में आपका स्वागत है",
+    welcome: "जन चेतना भारत पार्टी में आपका स्वागत है",
     steps: ["व्यक्तिगत जानकारी", "स्थान", "अतिरिक्त जानकारी", "पुष्टिकरण"],
     memberType: "सदस्य प्रकार",
     memberOptions: ["पुराने सदस्य", "नए सदस्य"],
@@ -713,8 +713,8 @@ export function MemberRegistrationForm() {
         <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
           <p className="text-blue-800 text-sm">
             {language === "en" 
-              ? "Thank you for your interest in joining Chhattisgarh New Party. Your information will help us serve you better."
-              : "छत्तीसगढ़ न्यू पार्टी में शामिल होने में रुचि लेने के लिए धन्यवाद। आपकी जानकारी हमें आपको बेहतर सेवा प्रदान करने में मदद करेगी।"}
+              ? "Thank you for your interest in joining Jan Chetna Bharat Party. Your information will help us serve you better."
+              : "जन चेतना भारत पार्टी में शामिल होने में रुचि लेने के लिए धन्यवाद। आपकी जानकारी हमें आपको बेहतर सेवा प्रदान करने में मदद करेगी।"}
           </p>
         </div>
       </div>

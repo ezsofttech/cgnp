@@ -780,7 +780,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Search, Users, Mail, Phone, MapPin, Calendar, CheckCircle, XCircle, Clock, ChevronLeft, ChevronRight, Download, Eye, FileDown } from "lucide-react"
+import { Search, Users, Mail, Phone, MapPin, Calendar, CheckCircle, XCircle, Clock, ChevronLeft, ChevronRight, Download, Eye, FileDown, Trash2, UserPlus } from "lucide-react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -792,7 +792,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { useToast } from "@/components/ui/use-toast"
 import { Member } from "@/types"
+import { usePartyStore } from "@/lib/stores/party-store"
+//import { usePartyStore } from "@/lib/store/usePartyStore" // Assuming your store is in this path
 
 interface MemberManagementProps {
   initialMembers: Member[]
@@ -816,11 +819,20 @@ export function MemberManagement({
   const [pagination, setPagination] = useState(initialPagination)
   const [loading, setLoading] = useState(false)
   const [exportLoading, setExportLoading] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState<string | null>(null)
   const router = useRouter()
+  const { toast } = useToast()
+  
+  // Get the deleteMember function from Zustand store
+  const { deleteMember } = usePartyStore()
 
   const canManageMembers =
     currentLeader?.permissions?.includes("manage_members") || 
     currentLeader?.permissions?.includes("admin_access")
+
+  const canDeleteMembers =
+    currentLeader?.role === "party_admin" || 
+    currentLeader?.permissions?.includes("delete_members")
 
   useEffect(() => {
     fetchMembers()
@@ -850,8 +862,48 @@ export function MemberManagement({
       }
     } catch (error) {
       console.error("Error fetching members:", error)
+      toast({
+        title: "Error",
+        description: "Failed to fetch members",
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleDeleteMember = async (memberId: string, memberName: string) => {
+    try {
+      setDeleteLoading(memberId)
+      
+      const result = await deleteMember(memberId)
+      
+      if (result.success) {
+        // Update local state to remove the deleted member
+        setMembers(prev => prev.filter(member => member._id !== memberId))
+        // Update pagination total
+        setPagination(prev => ({ ...prev, total: prev.total - 1 }))
+        
+        toast({
+          title: "Success",
+          description: `Member "${memberName}" has been deleted successfully`,
+        })
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to delete member",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error("Error in handleDeleteMember:", error)
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      })
+    } finally {
+      setDeleteLoading(null)
     }
   }
 
@@ -867,9 +919,18 @@ export function MemberManagement({
 
       if (response.ok) {
         fetchMembers() // Refresh the data
+        toast({
+          title: "Success",
+          description: "Member status updated successfully",
+        })
       }
     } catch (error) {
       console.error("Error updating member status:", error)
+      toast({
+        title: "Error",
+        description: "Failed to update member status",
+        variant: "destructive",
+      })
     }
   }
 
@@ -890,6 +951,10 @@ export function MemberManagement({
 
   const handleViewMember = (memberId: string) => {
     window.open(`/members/${memberId}`, "_blank", "noopener,noreferrer")
+  }
+
+  const handleAddMember = () => {
+    router.push("/members/new")
   }
 
   const exportAllMembers = async () => {
@@ -984,14 +1049,20 @@ export function MemberManagement({
         link.click()
         document.body.removeChild(link)
         
-        // Show success message
- 
+        toast({
+          title: "Success",
+          description: "All members exported successfully",
+        })
       } else {
         throw new Error("Failed to fetch members for export")
       }
     } catch (error) {
       console.error("Error exporting all members:", error)
-
+      toast({
+        title: "Error",
+        description: "Failed to export members",
+        variant: "destructive",
+      })
     } finally {
       setExportLoading(false)
     }
@@ -1054,7 +1125,7 @@ export function MemberManagement({
           `"${member.referredBy ? (typeof member.referredBy === 'object' ? member.referredBy.name : member.referredBy) : ''}"`,
           `"${member.joinedDate ? new Date(member.joinedDate).toLocaleDateString("en-IN") : ''}"`,
           `"${member.status || 'active'}"`, // Default to active for single export as well
-          `"${member.isVolunteer ? "Yes" : "No"}"`,
+          `"${member.isVolunteer ? "Yes" : "No"}`,
           `"${member.volunteerSkills?.join(', ') || ''}"`,
           `"${(member.additionalInfo || '').replace(/"/g, '""')}"`,
           `"${member.socialMedia?.facebook || ''}"`,
@@ -1075,8 +1146,18 @@ export function MemberManagement({
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
+      
+      toast({
+        title: "Success",
+        description: "Member exported successfully",
+      })
     } catch (error) {
       console.error("Error exporting single member:", error)
+      toast({
+        title: "Error",
+        description: "Failed to export member",
+        variant: "destructive",
+      })
     }
   }
 
@@ -1171,6 +1252,18 @@ export function MemberManagement({
               </form>
 
               <div className="flex items-center gap-2">
+                {/* {canManageMembers && (
+                  <Button
+                    onClick={handleAddMember}
+                    variant="default"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    Add Member
+                  </Button>
+                )} */}
+                
                 <Button
                   onClick={exportAllMembers}
                   disabled={exportLoading || pagination.total === 0}
@@ -1210,10 +1303,6 @@ export function MemberManagement({
                         <p className="text-sm text-gray-600">ID: {member.membershipId}</p>
                       </div>
                       <div className="flex flex-col items-end space-y-1">
-                        {/* <Badge className={`text-xs ${getStatusBadgeColor(member.status)} flex items-center gap-1`}>
-                          {getStatusIcon(member.status)}
-                          {member.status ? member.status.charAt(0).toUpperCase() + member.status.slice(1) : 'Active'}
-                        </Badge> */}
                         {member.isVolunteer && (
                           <Badge variant="outline" className="text-xs">
                             Volunteer
@@ -1254,15 +1343,45 @@ export function MemberManagement({
                         View Details
                       </Button>
 
-                      {/* <Button
-                        size="sm"
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() => exportSingleMemberToExcel(member)}
-                      >
-                        <FileDown className="h-4 w-4 mr-1" />
-                        Export
-                      </Button> */}
+                      {canDeleteMembers && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              className="flex-1"
+                              disabled={deleteLoading === member._id}
+                            >
+                              {deleteLoading === member._id ? (
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                              ) : (
+                                <>
+                                  <Trash2 className="h-4 w-4 mr-1" />
+                                  Delete
+                                </>
+                              )}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete member 
+                                <span className="font-semibold"> "{member.name}"</span> with ID: {member.membershipId}.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDeleteMember(member._id, member.name)}
+                                className="bg-red-600 hover:bg-red-700"
+                              >
+                                {deleteLoading === member._id ? "Deleting..." : "Delete Member"}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -1278,9 +1397,8 @@ export function MemberManagement({
                     <TableHead>Contact</TableHead>
                     <TableHead>Location</TableHead>
                     <TableHead>Joined</TableHead>
-                    {/* <TableHead>Status</TableHead> */}
                     <TableHead>Type</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1305,12 +1423,6 @@ export function MemberManagement({
                         </div>
                       </TableCell>
                       <TableCell>{member.joinedDate ? new Date(member.joinedDate).toLocaleDateString("en-IN") : 'N/A'}</TableCell>
-                      {/* <TableCell>
-                        <Badge className={`${getStatusBadgeColor(member.status)} flex items-center gap-1 w-fit`}>
-                          {getStatusIcon(member.status)}
-                          {member.status ? member.status.charAt(0).toUpperCase() + member.status.slice(1) : 'Active'}
-                        </Badge>
-                      </TableCell> */}
                       <TableCell>
                         {member.isVolunteer ? (
                           <Badge variant="outline">Volunteer</Badge>
@@ -1319,7 +1431,7 @@ export function MemberManagement({
                         )}
                       </TableCell>
                       <TableCell>
-                        <div className="flex space-x-2">
+                        <div className="flex justify-end space-x-2">
                           <Button
                             size="sm"
                             variant="outline"
@@ -1327,7 +1439,6 @@ export function MemberManagement({
                             title="View Details"
                           >
                             <Eye className="h-4 w-4" />
-                            View
                           </Button>
 
                           {/* <Button
@@ -1338,6 +1449,44 @@ export function MemberManagement({
                           >
                             <FileDown className="h-4 w-4" />
                           </Button> */}
+
+                          {canDeleteMembers && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  title="Delete Member"
+                                  disabled={deleteLoading === member._id}
+                                >
+                                  {deleteLoading === member._id ? (
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                  ) : (
+                                    <Trash2 className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently delete the member
+                                    <span className="font-semibold"> "{member.name}"</span> (ID: {member.membershipId})
+                                    from the database.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDeleteMember(member._id, member.name)}
+                                    className="bg-red-600 hover:bg-red-700"
+                                  >
+                                    {deleteLoading === member._id ? "Deleting..." : "Delete"}
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -1418,6 +1567,16 @@ export function MemberManagement({
                 <p className="text-gray-400 text-sm">
                   {searchTerm ? "Try adjusting your search terms" : "No members have been referred yet"}
                 </p>
+                {canManageMembers && (
+                  <Button
+                    onClick={handleAddMember}
+                    variant="default"
+                    className="mt-4"
+                  >
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Add Your First Member
+                  </Button>
+                )}
               </div>
             )}
           </div>

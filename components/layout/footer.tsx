@@ -12,8 +12,8 @@ export function Footer() {
                 <Zap className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <div className="text-lg font-bold">CG NP</div>
-                <div className="text-sm text-blue-200">Chhattisgarh New Party</div>
+                <div className="text-lg font-bold">JCBP</div>
+                <div className="text-sm text-blue-200">जन चेतना भारत पार्टी</div>
               </div>
             </div>
             <p className="text-blue-100 text-sm">
@@ -44,15 +44,15 @@ export function Footer() {
             <div className="space-y-2 text-sm text-blue-200">
               <div className="flex items-center space-x-2">
                 <Mail className="h-4 w-4" />
-                <span>info@cgnp.org</span>
+                <span>jcbparty2025@gmail.com</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Phone className="h-4 w-4" />
-                <span>+91 11 4143 4143</span>
+                <span>+91 626 2222 363</span>
               </div>
               <div className="flex items-center space-x-2">
                 <MapPin className="h-4 w-4" />
-                <span>Bilaspur Chhattisgarh</span>
+                <span>Gram Hardi, Tehsil Bodri, NH-130 Bilaspur–Raipur Road, District Bilaspur – 495222 (C.G.), India</span>
               </div>
             </div>
           </div>
@@ -77,7 +77,7 @@ export function Footer() {
         </div>
 
         <div className="border-t border-blue-800 mt-8 pt-8 text-center text-sm text-blue-200">
-          <p>&copy; {new Date().getFullYear()} Chhattisgaarh New Party. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Jan Bharat Chetna Party. All rights reserved.</p>
         </div>
       </div>
     </footer>
