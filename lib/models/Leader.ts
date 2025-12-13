@@ -13,20 +13,7 @@ export interface ILeader extends Document {
   referralCode: string
   joinedDate: Date
   isActive: boolean
-role: {
-  type: String,
-  enum: [
-    "party_admin", // ✅ Add this new role
-    "national_convenor",
-    "deputy_convenor",
-    "policy_head",
-    "organization_secretary",
-    "state_convenor",
-    "district_convenor",
-  ],
-  required: [true, "Role is required"],
-},
-
+  role: string
   permissions: string[]
   createdAt: Date
   updatedAt: Date
@@ -90,6 +77,7 @@ const LeaderSchema = new Schema<ILeader>(
     role: {
       type: String,
       enum: [
+        "party_admin",
         "national_convenor",
         "deputy_convenor",
         "policy_head",
@@ -112,17 +100,19 @@ const LeaderSchema = new Schema<ILeader>(
 )
 
 // Hash password before saving
-LeaderSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next()
+LeaderSchema.pre('save', function(next) {
+  if (!this.isModified('password')) return next();
 
-  try {
-    const salt = await bcrypt.genSalt(12)
-    this.password = await bcrypt.hash(this.password, salt)
-    next()
-  } catch (error: any) {
-    next(error)
-  }
-})
+  const doc = this;
+  bcrypt.genSalt(12).then(salt => {
+    return bcrypt.hash(doc.password, salt);
+  }).then(hash => {
+    doc.password = hash;
+    next();
+  }).catch(err => {
+    next(err);
+  });
+});
 
 // Compare password method
 LeaderSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
