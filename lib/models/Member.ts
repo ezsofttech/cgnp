@@ -194,8 +194,8 @@ const MemberSchema = new Schema<IMember>(
 )
 
 // Update the pre-save hook to handle new fields
-MemberSchema.pre("save", async function (next) {
-  if (!this.isNew) return next()
+MemberSchema.pre("save", async function () {
+  if (!this.isNew) return
 
   // Calculate age from dateOfBirth if not provided
   if (this.dateOfBirth && !this.age) {
@@ -253,8 +253,6 @@ if (!this.membershipId) {
   if (this.isWhatsAppSame && !this.whatsappNumber) {
     this.whatsappNumber = this.mobileNumber
   }
-
-  next()
 })
 
 export default mongoose.models.Member || mongoose.model<IMember>("Member", MemberSchema)
