@@ -50,7 +50,7 @@ export function HeroSection() {
       <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center mt-6">
         <Button asChild size="lg" className="text-lg px-8 py-6 bg-blue-600 hover:bg-blue-700">
           <Link href="/join">
-              पार्टी से जुड़े
+              पार्टी से जुड़े !
             <ArrowRight className="ml-2 h-5 w-5" />
           </Link>
         </Button>
