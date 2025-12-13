@@ -795,7 +795,6 @@ import {
 import { useToast } from "@/components/ui/use-toast"
 import { Member } from "@/types"
 import { usePartyStore } from "@/lib/stores/party-store"
-//import { usePartyStore } from "@/lib/store/usePartyStore" // Assuming your store is in this path
 
 interface MemberManagementProps {
   initialMembers: Member[]
@@ -806,12 +805,14 @@ interface MemberManagementProps {
     pages: number
   }
   currentLeader?: any
+  onMemberDeleted?: () => void
 }
 
 export function MemberManagement({ 
   initialMembers = [], 
   initialPagination = { page: 1, limit: 10, total: 0, pages: 1 },
-  currentLeader 
+  currentLeader,
+  onMemberDeleted
 }: MemberManagementProps) {
   const [members, setMembers] = useState<Member[]>(initialMembers)
   const [searchTerm, setSearchTerm] = useState("")
@@ -834,9 +835,11 @@ export function MemberManagement({
     currentLeader?.role === "party_admin" || 
     currentLeader?.permissions?.includes("delete_members")
 
+  // Sync with props
   useEffect(() => {
-    fetchMembers()
-  }, [pagination.page, pagination.limit, statusFilter])
+    setMembers(initialMembers)
+    setPagination(initialPagination)
+  }, [initialMembers, initialPagination])
 
   const fetchMembers = async () => {
     try {
@@ -879,10 +882,32 @@ export function MemberManagement({
       const result = await deleteMember(memberId)
       
       if (result.success) {
-        // Update local state to remove the deleted member
+        // Calculate new pagination values
+        const newTotal = pagination.total - 1
+        const newPages = Math.ceil(newTotal / pagination.limit)
+        
+        // Adjust current page if needed (if we deleted the last item on the current page)
+        let newPage = pagination.page
+        if (members.length === 1 && pagination.page > 1) {
+          // If this was the last item on the page, go to previous page
+          newPage = Math.max(1, pagination.page - 1)
+        }
+        
+        // Update pagination
+        setPagination(prev => ({ 
+          ...prev, 
+          total: newTotal,
+          pages: newPages,
+          page: newPage
+        }))
+        
+        // Update local state immediately
         setMembers(prev => prev.filter(member => member._id !== memberId))
-        // Update pagination total
-        setPagination(prev => ({ ...prev, total: prev.total - 1 }))
+        
+        // Notify parent component
+        if (onMemberDeleted) {
+          onMemberDeleted()
+        }
         
         toast({
           title: "Success",
@@ -918,7 +943,10 @@ export function MemberManagement({
       })
 
       if (response.ok) {
-        fetchMembers() // Refresh the data
+        // Update local state immediately
+        setMembers(prev => prev.map(member => 
+          member._id === memberId ? { ...member, status: newStatus } : member
+        ))
         toast({
           title: "Success",
           description: "Member status updated successfully",
@@ -937,16 +965,21 @@ export function MemberManagement({
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= pagination.pages) {
       setPagination(prev => ({ ...prev, page: newPage }))
+      // Fetch new page data
+      fetchMembers()
     }
   }
 
   const handleLimitChange = (newLimit: number) => {
     setPagination(prev => ({ ...prev, limit: newLimit, page: 1 }))
+    // Fetch with new limit
+    fetchMembers()
   }
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     setPagination(prev => ({ ...prev, page: 1 }))
+    fetchMembers()
   }
 
   const handleViewMember = (memberId: string) => {
@@ -1068,119 +1101,13 @@ export function MemberManagement({
     }
   }
 
-  const exportSingleMemberToExcel = async (member: Member) => {
-    try {
-      // Create CSV content for single member with all fields
-      const headers = [
-        "Name", 
-        "Email", 
-        "Mobile Number", 
-        "WhatsApp Number", 
-        "Is WhatsApp Same",
-        "Address", 
-        "District", 
-        "Lok Sabha Constituency", 
-        "Vidhan Sabha Constituency", 
-        "Ward", 
-        "Tehsil", 
-        "Age", 
-        "Gender", 
-        "Member Type", 
-        "Occupation", 
-        "Membership ID", 
-        "Referral Code",
-        "Referred By",
-        "Joined Date", 
-        "Status", 
-        "Is Volunteer", 
-        "Volunteer Skills",
-        "Additional Info",
-        "Social Media - Facebook",
-        "Social Media - Twitter", 
-        "Social Media - Instagram",
-        "Created At",
-        "Updated At"
-      ]
-      
-      const csvContent = [
-        headers.join(","),
-        [
-          `"${member.name || ''}"`,
-          `"${member.email || ''}"`,
-          `"${member.mobileNumber || ''}"`,
-          `"${member.whatsappNumber || ''}"`,
-          `"${member.isWhatsAppSame ? 'Yes' : 'No'}"`,
-          `"${(member.address || '').replace(/"/g, '""')}"`,
-          `"${member.district || ''}"`,
-          `"${member.lokSabha || ''}"`,
-          `"${member.vidhanSabha || ''}"`,
-          `"${member.ward || ''}"`,
-          `"${member.tehsil || ''}"`,
-          `"${member.age || ''}"`,
-          `"${member.gender || ''}"`,
-          `"${member.memberType || ''}"`,
-          `"${member.occupation || ''}"`,
-          `"${member.membershipId || ''}"`,
-          `"${member.referralCode || ''}"`,
-          `"${member.referredBy ? (typeof member.referredBy === 'object' ? member.referredBy.name : member.referredBy) : ''}"`,
-          `"${member.joinedDate ? new Date(member.joinedDate).toLocaleDateString("en-IN") : ''}"`,
-          `"${member.status || 'active'}"`, // Default to active for single export as well
-          `"${member.isVolunteer ? "Yes" : "No"}`,
-          `"${member.volunteerSkills?.join(', ') || ''}"`,
-          `"${(member.additionalInfo || '').replace(/"/g, '""')}"`,
-          `"${member.socialMedia?.facebook || ''}"`,
-          `"${member.socialMedia?.twitter || ''}"`,
-          `"${member.socialMedia?.instagram || ''}"`,
-          `"${member.createdAt ? new Date(member.createdAt).toLocaleDateString("en-IN") : ''}"`,
-          `"${member.updatedAt ? new Date(member.updatedAt).toLocaleDateString("en-IN") : ''}"`
-        ].join(",")
-      ].join("\n")
-
-      // Create and download file
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-      const link = document.createElement("a")
-      const url = URL.createObjectURL(blob)
-      link.setAttribute("href", url)
-      link.setAttribute("download", `member-${member.membershipId || member.name}-${new Date().toISOString().split('T')[0]}.csv`)
-      link.style.visibility = "hidden"
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      
-      toast({
-        title: "Success",
-        description: "Member exported successfully",
-      })
-    } catch (error) {
-      console.error("Error exporting single member:", error)
-      toast({
-        title: "Error",
-        description: "Failed to export member",
-        variant: "destructive",
-      })
-    }
-  }
-
   const getStatusBadgeColor = (status: string) => {
     const colors = {
       active: "bg-green-100 text-green-800",
       pending: "bg-yellow-100 text-yellow-800",
       inactive: "bg-gray-100 text-gray-800",
     }
-    return colors[status as keyof typeof colors] || "bg-green-100 text-green-800" // Default to active color
-  }
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "active":
-        return <CheckCircle className="h-4 w-4 text-green-600" />
-      case "pending":
-        return <Clock className="h-4 w-4 text-yellow-600" />
-      case "inactive":
-        return <XCircle className="h-4 w-4 text-gray-600" />
-      default:
-        return <CheckCircle className="h-4 w-4 text-green-600" /> // Default to active icon
-    }
+    return colors[status as keyof typeof colors] || "bg-green-100 text-green-800"
   }
 
   if (loading) {
@@ -1252,18 +1179,6 @@ export function MemberManagement({
               </form>
 
               <div className="flex items-center gap-2">
-                {/* {canManageMembers && (
-                  <Button
-                    onClick={handleAddMember}
-                    variant="default"
-                    size="sm"
-                    className="flex items-center gap-2"
-                  >
-                    <UserPlus className="h-4 w-4" />
-                    Add Member
-                  </Button>
-                )} */}
-                
                 <Button
                   onClick={exportAllMembers}
                   disabled={exportLoading || pagination.total === 0}
@@ -1272,7 +1187,7 @@ export function MemberManagement({
                   className="flex items-center gap-2"
                 >
                   <Download className="h-4 w-4" />
-                  {exportLoading ? "Exporting..." : `Export All `}
+                  {exportLoading ? "Exporting..." : `Export All`}
                 </Button>
                 
                 <div className="flex items-center space-x-2">
@@ -1440,15 +1355,6 @@ export function MemberManagement({
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
-
-                          {/* <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => exportSingleMemberToExcel(member)}
-                            title="Export to Excel"
-                          >
-                            <FileDown className="h-4 w-4" />
-                          </Button> */}
 
                           {canDeleteMembers && (
                             <AlertDialog>
