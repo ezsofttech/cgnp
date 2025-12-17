@@ -3,11 +3,13 @@ import dbConnect from "@/lib/mongodb"
 import Member from "@/lib/models/Member"
 import { authenticateRequest } from "@/lib/auth"
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await dbConnect()
 
-    const member = await Member.findById(params.id).populate("referredBy", "name email referralCode")
+    const { id } = await params
+
+    const member = await Member.findById(id).populate("referredBy", "name email referralCode")
 
     if (!member) {
       return NextResponse.json({ error: "Member not found" }, { status: 404 })
@@ -20,7 +22,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await dbConnect()
 
@@ -30,6 +32,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const { id } = await params
+
     const updateData = await request.json()
 
     // Remove sensitive fields that shouldn't be updated
@@ -37,7 +41,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     delete updateData.referralCode
     delete updateData.email
 
-    const member = await Member.findByIdAndUpdate(params.id, updateData, {
+    const member = await Member.findByIdAndUpdate(id, updateData, {
       new: true,
       runValidators: true,
     }).populate("referredBy", "name email referralCode")
@@ -62,7 +66,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await dbConnect()
 
@@ -72,7 +76,9 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const member = await Member.findByIdAndUpdate(params.id, { status: "inactive" }, { new: true }).populate(
+    const { id } = await params
+
+    const member = await Member.findByIdAndUpdate(id, { status: "inactive" }, { new: true }).populate(
       "referredBy",
       "name email referralCode",
     )

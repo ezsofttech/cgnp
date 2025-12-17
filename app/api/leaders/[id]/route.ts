@@ -3,11 +3,13 @@ import dbConnect from "@/lib/mongodb"
 import Leader from "@/lib/models/Leader"
 import { authenticateRequest } from "@/lib/auth"
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await dbConnect()
 
-    const leader = await Leader.findById(params.id).select("-password")
+    const { id } = await params
+
+    const leader = await Leader.findById(id).select("-password")
 
     if (!leader) {
       return NextResponse.json({ error: "Leader not found" }, { status: 404 })
@@ -20,7 +22,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await dbConnect()
 
@@ -30,9 +32,11 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const { id } = await params
+
     // Check if user is updating their own profile or has admin permissions
     const currentLeader = await Leader.findById(auth.leaderId)
-    if (auth.leaderId !== params.id && !currentLeader?.permissions.includes("admin_access")) {
+    if (auth.leaderId !== id && !currentLeader?.permissions.includes("admin_access")) {
       return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 })
     }
 
@@ -43,7 +47,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     delete updateData.email
     delete updateData.referralCode
 
-    const leader = await Leader.findByIdAndUpdate(params.id, updateData, {
+    const leader = await Leader.findByIdAndUpdate(id, updateData, {
       new: true,
       runValidators: true,
     }).select("-password")
@@ -84,8 +88,10 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
     }
 
+    const { id } = await params
+
     // 🧹 Permanently delete the leader from DB
-    const leader = await Leader.findByIdAndDelete(params.id);
+    const leader = await Leader.findByIdAndDelete(id);
 
     if (!leader) {
       return NextResponse.json({ error: "Leader not found" }, { status: 404 });
@@ -93,7 +99,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
 
     return NextResponse.json({
       message: "Leader deleted successfully",
-      deletedLeaderId: params.id,
+      deletedLeaderId: id,
     });
   } catch (error) {
     console.error("Delete leader error:", error);
