@@ -40,6 +40,9 @@ interface Member {
   email: string
   phone: string
   address: string
+  mobileNumber: string
+  whatsappNumber: string
+  isWhatsAppSame: boolean
   dateOfBirth?: string
   occupation?: string
   referredBy?: string
@@ -99,10 +102,11 @@ interface PartyState {
   // Actions
   setLoading: (loading: boolean) => void
   fetchLeaders: () => Promise<void>
-  fetchMembers: (refferalCode?: string) => Promise<void>
+  fetchMembers: () => Promise<void>
   fetchPartyInfo: () => Promise<void>
-  addMember: (memberData: any) => Promise<{ success: boolean; error?: string }>
+  addMember: (memberData: any) => Promise<{ success: boolean; error?: string; member?: any }>
   deleteMember: (memberId: string) => Promise<{ success: boolean; error?: string }>
+  checkMobileExists: (mobileNumber: string) => Promise<{ exists: boolean; message?: string }>
   generateReferralLink: (refferalCode: string) => string
   getReferralLink: (refferalCode: string, forceRefresh?: boolean) => Promise<ReferralLinkResponse>
   getReferralLinkByLeaderId: (leaderId: string) => Promise<ReferralLinkResponse>
@@ -186,13 +190,20 @@ export const usePartyStore = create<PartyState>((set, get) => ({
 
       const data = await response.json()
       if (response.ok) {
-        await get().fetchMembers(memberData.referredBy)
-        return { success: true }
+        // Refresh members list
+        await get().fetchMembers()
+        return { success: true, member: data.member }
       } else {
-        return { success: false, error: data.error }
+        return { 
+          success: false, 
+          error: data.error || data.details?.[0] || "Failed to add member" 
+        }
       }
-    } catch {
-      return { success: false, error: "Network error" }
+    } catch (error: any) {
+      return { 
+        success: false, 
+        error: error.message || "Network error" 
+      }
     }
   },
 
@@ -222,6 +233,20 @@ export const usePartyStore = create<PartyState>((set, get) => ({
     } catch (error) {
       console.error("Error deleting member:", error)
       return { success: false, error: "Network error" }
+    }
+  },
+
+  checkMobileExists: async (mobileNumber: string) => {
+    try {
+      const response = await fetch(`/api/members/check-mobile?mobile=${mobileNumber}`)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const data = await response.json()
+      return { exists: data.exists, message: data.message }
+    } catch (error) {
+      console.error('Error checking mobile:', error)
+      return { exists: false, message: 'Error checking mobile number' }
     }
   },
 

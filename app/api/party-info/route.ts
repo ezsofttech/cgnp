@@ -25,7 +25,7 @@ export async function GET() {
     console.log("MongoDB connected");
 
     const partyInfo = await PartyInfo.findOne().sort({ createdAt: -1 });
-    console.log("Fetched party info:", partyInfo);
+    // console.log("Fetched party info:", partyInfo);
 
     if (!partyInfo) {
       return NextResponse.json({ error: "Party information not found" }, { status: 404 });

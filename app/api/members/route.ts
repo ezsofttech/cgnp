@@ -81,21 +81,44 @@ export async function GET(request: NextRequest) {
 
     // 🧩 Step 6: Fetch members
     if (exportAll) {
-      const allMembers = await Member.find(query)
-        .populate("referredBy", "name email referralCode")
-        .sort({ createdAt: -1 })
-        .lean();
+  // Extract dates
+  const startDateParam = searchParams.get("startDate");
+  const endDateParam = searchParams.get("endDate");
 
-      return NextResponse.json({
-        members: allMembers,
-        pagination: {
-          page: 1,
-          limit: allMembers.length,
-          total: allMembers.length,
-          pages: 1,
-        },
-      });
-    }
+  let dateFilter = {};
+
+  // Apply date range if both provided
+  if (startDateParam && endDateParam) {
+    const start = new Date(startDateParam);
+    const end = new Date(endDateParam + "T23:59:59");
+
+    dateFilter = { joinedDate: { $gte: start, $lte: end } };
+  }
+
+  // Add date filter to main query
+  const finalQuery = {
+    ...query,
+    ...dateFilter,
+  };
+
+  console.log("FINAL EXPORT QUERY:", finalQuery);
+
+  const allMembers = await Member.find(finalQuery)
+    .populate("referredBy", "name email referralCode")
+    .sort({ createdAt: -1 })
+    .lean();
+
+  return NextResponse.json({
+    members: allMembers,
+    pagination: {
+      page: 1,
+      limit: allMembers.length,
+      total: allMembers.length,
+      pages: 1,
+    },
+  });
+}
+
 
     const members = await Member.find(query)
       .populate("referredBy", "name email referralCode")

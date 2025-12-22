@@ -1,7 +1,6 @@
-
 "use client"
 
-import { Suspense, useEffect, useState, useRef } from "react"
+import { Suspense, useEffect, useState, useRef, useCallback } from "react"
 import { motion } from "framer-motion"
 import { ChevronDown, Check, Languages, ArrowRight, ArrowLeft, Loader2 } from "lucide-react"
 import { Header } from "@/components/layout/header"
@@ -159,7 +158,7 @@ const constituencyData = {
 const content = {
   en: {
     title: "Member Registration",
-    welcome: "Welcome to JC BP Party",
+    welcome: "Welcome to JCBP Party",
     steps: ["Personal Info", "Location", "Additional Info", "Confirmation"],
     memberType: "Member Type",
     memberOptions: ["Existing Member", "New Member"],
@@ -201,7 +200,8 @@ const content = {
       mobileLength: "Mobile number must be exactly 10 digits",
       digitsOnly: "Only digits are allowed",
       whatsappLength: "WhatsApp number must be exactly 10 digits",
-      emailInvalid: "Please enter a valid email address"
+      emailInvalid: "Please enter a valid email address",
+      mobileExists: "Mobile number already exists. Please use a different number."
     }
   },
   hi: {
@@ -248,7 +248,8 @@ const content = {
       mobileLength: "मोबाइल नंबर 10 अंकों का होना चाहिए",
       digitsOnly: "केवल अंकों की अनुमति है",
       whatsappLength: "WhatsApp नंबर 10 अंकों का होना चाहिए",
-      emailInvalid: "कृपया एक वैध ईमेल पता दर्ज करें"
+      emailInvalid: "कृपया एक वैध ईमेल पता दर्ज करें",
+      mobileExists: "मोबाइल नंबर पहले से मौजूद है। कृपया कोई अन्य नंबर प्रयोग करें।"
     }
   }
 }
@@ -261,8 +262,10 @@ export function MemberRegistrationForm() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [filteredVidhanSabha, setFilteredVidhanSabha] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isCheckingMobile, setIsCheckingMobile] = useState(false)
+  const [mobileExists, setMobileExists] = useState(false)
   const t = content[language]
-  const { addMember, isLoading } = usePartyStore()
+  const { addMember, isLoading, checkMobileExists } = usePartyStore()
   
   // Add a ref for the form container to scroll to
   const formContainerRef = useRef<HTMLDivElement>(null)
@@ -324,6 +327,48 @@ export function MemberRegistrationForm() {
     }
   }, [formData.lokSabha]);
 
+  // Function to check mobile number existence
+  const checkMobileNumber = useCallback(async (mobileNumber: string) => {
+    if (!mobileNumber || mobileNumber.length !== 10 || !/^\d+$/.test(mobileNumber)) {
+      setMobileExists(false);
+      return;
+    }
+
+    setIsCheckingMobile(true);
+    try {
+      const result = await checkMobileExists(mobileNumber);
+      setMobileExists(result.exists);
+      
+      if (result.exists) {
+        setErrors(prev => ({
+          ...prev,
+          mobileNumber: t.validation.mobileExists
+        }));
+      } else {
+        setErrors(prev => {
+          const newErrors = {...prev};
+          delete newErrors.mobileNumber;
+          return newErrors;
+        });
+      }
+    } catch (error) {
+      console.error('Error checking mobile number:', error);
+    } finally {
+      setIsCheckingMobile(false);
+    }
+  }, [checkMobileExists, t]);
+
+  // Debounced mobile number check
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (formData.mobileNumber && formData.mobileNumber.length === 10) {
+        checkMobileNumber(formData.mobileNumber);
+      }
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timer);
+  }, [formData.mobileNumber, checkMobileNumber]);
+
   const submissionData = {
     ...formData,
     referredBy: formData.referredBy || undefined
@@ -351,6 +396,8 @@ export function MemberRegistrationForm() {
         newErrors.mobileNumber = t.validation.digitsOnly
       } else if (formData.mobileNumber.length !== 10) {
         newErrors.mobileNumber = t.validation.mobileLength
+      } else if (mobileExists) {
+        newErrors.mobileNumber = t.validation.mobileExists
       }
 
       // Email validation - optional but must be valid format if provided
@@ -359,8 +406,10 @@ export function MemberRegistrationForm() {
       }
 
       // WhatsApp number validation if different from mobile
-      if (!formData.isWhatsAppSame && formData.whatsappNumber) {
-        if (!/^\d+$/.test(formData.whatsappNumber)) {
+      if (!formData.isWhatsAppSame) {
+        if (!formData.whatsappNumber) {
+          newErrors.whatsappNumber = t.validation.required
+        } else if (!/^\d+$/.test(formData.whatsappNumber)) {
           newErrors.whatsappNumber = t.validation.digitsOnly
         } else if (formData.whatsappNumber.length !== 10) {
           newErrors.whatsappNumber = t.validation.whatsappLength
@@ -369,14 +418,17 @@ export function MemberRegistrationForm() {
     }
 
     setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+    return Object.keys(newErrors).length === 0 && !mobileExists
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target as HTMLInputElement
+    
+    const newValue = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+    
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+      [name]: newValue
     }))
 
     // Clear error when user starts typing
@@ -386,6 +438,11 @@ export function MemberRegistrationForm() {
         delete newErrors[name]
         return newErrors
       })
+    }
+
+    // Clear mobile exists flag when user changes mobile number
+    if (name === 'mobileNumber') {
+      setMobileExists(false);
     }
 
     // Real-time email validation only if email is provided
@@ -402,6 +459,14 @@ export function MemberRegistrationForm() {
           return newErrors
         })
       }
+    }
+
+    // If WhatsApp same is checked, copy mobile number to WhatsApp
+    if (name === 'isWhatsAppSame' && (e.target as HTMLInputElement).checked) {
+      setFormData(prev => ({
+        ...prev,
+        whatsappNumber: prev.mobileNumber
+      }))
     }
   }
 
@@ -452,9 +517,22 @@ export function MemberRegistrationForm() {
           setIsSubmitted(true)
           // Scroll to top on successful submission
           setTimeout(scrollToTop, 100)
+        } else if (result.error?.includes('mobile') || result.error?.includes('Mobile')) {
+          // Handle mobile number duplication error from backend
+          setErrors(prev => ({
+            ...prev,
+            mobileNumber: t.validation.mobileExists
+          }))
+          setMobileExists(true)
+          setCurrentStep(0) // Go back to first step
+          setTimeout(scrollToTop, 100)
+        } else {
+          // Handle other errors
+          alert(result.error || 'Failed to register. Please try again.')
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Submission error:', error)
+        alert('An error occurred. Please try again.')
       } finally {
         setIsSubmitting(false)
       }
@@ -467,7 +545,7 @@ export function MemberRegistrationForm() {
       <h2 className="text-2xl font-bold text-gray-800">{t.personalDetails}</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">{t.name}</label>
+          <label className="block text-sm font-medium text-gray-700">{t.name} *</label>
           <input
             type="text"
             name="name"
@@ -484,12 +562,14 @@ export function MemberRegistrationForm() {
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">{t.age}</label>
+          <label className="block text-sm font-medium text-gray-700">{t.age} *</label>
           <input
             type="number"
             name="age"
             value={formData.age}
             onChange={handleChange}
+            min="18"
+            max="120"
             className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
               errors.age ? 'border-red-500' : 'border-gray-300'
             }`}
@@ -501,7 +581,7 @@ export function MemberRegistrationForm() {
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">{t.gender}</label>
+          <label className="block text-sm font-medium text-gray-700">{t.gender} *</label>
           <div className="relative">
             <select
               name="gender"
@@ -514,7 +594,7 @@ export function MemberRegistrationForm() {
             >
               <option value="">{t.selectGender}</option>
               {t.genderOptions.map(option => (
-                <option key={option} value={option}>{option}</option>
+                <option key={option} value={option.toLowerCase()}>{option}</option>
               ))}
             </select>
             <ChevronDown className="absolute right-3 top-4 h-4 w-4 text-gray-400" />
@@ -525,18 +605,31 @@ export function MemberRegistrationForm() {
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">{t.mobileNumber}</label>
-          <input
-            type="number"
-            name="mobileNumber"
-            value={formData.mobileNumber}
-            onChange={handleChange}
-            maxLength={10}
-            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
-              errors.mobileNumber ? 'border-red-500' : 'border-gray-300'
-            }`}
-            required
-          />
+          <label className="block text-sm font-medium text-gray-700">{t.mobileNumber} *</label>
+          <div className="relative">
+            <input
+              type="tel"
+              name="mobileNumber"
+              value={formData.mobileNumber}
+              onChange={handleChange}
+              maxLength={10}
+              pattern="[0-9]{10}"
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all pr-10 ${
+                errors.mobileNumber || mobileExists ? 'border-red-500' : 'border-gray-300'
+              }`}
+              required
+            />
+            {isCheckingMobile && (
+              <div className="absolute right-3 top-3.5">
+                <Loader2 className="h-5 w-5 text-gray-400 animate-spin" />
+              </div>
+            )}
+            {!isCheckingMobile && formData.mobileNumber.length === 10 && !mobileExists && !errors.mobileNumber && (
+              <div className="absolute right-3 top-3.5">
+                <Check className="h-5 w-5 text-green-500" />
+              </div>
+            )}
+          </div>
           {errors.mobileNumber && (
             <div className="text-red-500 text-sm">{errors.mobileNumber}</div>
           )}
@@ -559,13 +652,14 @@ export function MemberRegistrationForm() {
 
         {!formData.isWhatsAppSame && (
           <div className="space-y-2 md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700">{t.whatsappNumber}</label>
+            <label className="block text-sm font-medium text-gray-700">{t.whatsappNumber} *</label>
             <input
               type="tel"
               name="whatsappNumber"
               value={formData.whatsappNumber}
               onChange={handleChange}
               maxLength={10}
+              pattern="[0-9]{10}"
               className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
                 errors.whatsappNumber ? 'border-red-500' : 'border-gray-300'
               }`}
@@ -576,7 +670,7 @@ export function MemberRegistrationForm() {
           </div>
         )}
 
-{/* email */}
+        {/* email */}
         <div className="space-y-2 md:col-span-2">
           <label className="block text-sm font-medium text-gray-700">
             {t.email} <span className="text-gray-500 text-sm">{t.emailOptional}</span>
@@ -595,8 +689,6 @@ export function MemberRegistrationForm() {
             <div className="text-red-500 text-sm">{errors.email}</div>
           )}
         </div>
-
-
       </div>
     </div>,
 
@@ -605,13 +697,14 @@ export function MemberRegistrationForm() {
       <h2 className="text-2xl font-bold text-gray-800">{t.locationDetails}</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">{t.lokSabha}</label>
+          <label className="block text-sm font-medium text-gray-700">{t.lokSabha} *</label>
           <div className="relative">
             <select
               name="lokSabha"
               value={formData.lokSabha}
               onChange={handleChange}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg appearance-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              required
             >
               <option value="">{t.selectOption}</option>
               {constituencyData.lokSabhaConstituencies.map(constituency => (
@@ -623,7 +716,7 @@ export function MemberRegistrationForm() {
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">{t.vidhanSabha}</label>
+          <label className="block text-sm font-medium text-gray-700">{t.vidhanSabha} *</label>
           <div className="relative">
             <select
               name="vidhanSabha"
@@ -633,6 +726,7 @@ export function MemberRegistrationForm() {
                 !formData.lokSabha ? 'bg-gray-100 text-gray-500' : 'border-gray-300'
               }`}
               disabled={!formData.lokSabha}
+              required
             >
               <option value="">
                 {formData.lokSabha ? t.selectOption : t.selectLokSabhaFirst}
@@ -653,13 +747,14 @@ export function MemberRegistrationForm() {
         </div>
 
         <div className="space-y-2 md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700">{t.address}</label>
+          <label className="block text-sm font-medium text-gray-700">{t.address} *</label>
           <textarea
             name="address"
             value={formData.address}
             onChange={handleChange}
             rows={3}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            required
           />
         </div>
 
@@ -686,13 +781,14 @@ export function MemberRegistrationForm() {
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">{t.district}</label>
+          <label className="block text-sm font-medium text-gray-700">{t.district} *</label>
           <input
             type="text"
             name="district"
             value={formData.district}
             onChange={handleChange}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            required
           />
         </div>
       </div>
@@ -828,7 +924,9 @@ export function MemberRegistrationForm() {
           <p className="text-gray-600 text-lg mb-6">{t.thankYouMessage}</p>
           <div className="bg-blue-50 rounded-lg p-4 max-w-md mx-auto">
             <p className="text-blue-800">
-             <a href="./" className="hover:underline">Home</a>
+              <a href="./" className="hover:underline">
+                {language === "en" ? "Return to Home" : "होम पर वापस जाएं"}
+              </a>
             </p>
           </div>
         </div>
@@ -907,9 +1005,12 @@ export function MemberRegistrationForm() {
             <motion.button
               type="button"
               onClick={nextStep}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors ml-auto"
+              disabled={mobileExists || isCheckingMobile}
+              whileHover={!(mobileExists || isCheckingMobile) ? { scale: 1.02 } : {}}
+              whileTap={!(mobileExists || isCheckingMobile) ? { scale: 0.98 } : {}}
+              className={`flex items-center gap-2 px-6 py-3 ${
+                (mobileExists || isCheckingMobile) ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+              } text-white font-medium rounded-lg transition-colors ml-auto`}
             >
               {t.next}
               <ArrowRight className="h-5 w-5" />
@@ -917,11 +1018,11 @@ export function MemberRegistrationForm() {
           ) : (
             <motion.button
               type="submit"
-              disabled={isSubmitting || isLoading}
-              whileHover={!(isSubmitting || isLoading) ? { scale: 1.02 } : {}}
-              whileTap={!(isSubmitting || isLoading) ? { scale: 0.98 } : {}}
+              disabled={isSubmitting || isLoading || mobileExists || isCheckingMobile}
+              whileHover={!(isSubmitting || isLoading || mobileExists || isCheckingMobile) ? { scale: 1.02 } : {}}
+              whileTap={!(isSubmitting || isLoading || mobileExists || isCheckingMobile) ? { scale: 0.98 } : {}}
               className={`flex items-center gap-2 px-6 py-3 ${
-                (isSubmitting || isLoading) ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
+                (isSubmitting || isLoading || mobileExists || isCheckingMobile) ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
               } text-white font-medium rounded-lg transition-colors ml-auto`}
             >
               {(isSubmitting || isLoading) ? (
@@ -945,7 +1046,11 @@ export function MemberRegistrationForm() {
 
 export default function JoinPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    }>
       <Header/>
       <MemberRegistrationForm />
       <Footer/>

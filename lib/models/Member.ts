@@ -1,5 +1,5 @@
+// models/Member.ts
 import mongoose, { type Document, Schema } from "mongoose"
-import { fa } from "zod/v4/locales"
 
 export interface IMember extends Document {
   name: string
@@ -48,7 +48,7 @@ const MemberSchema = new Schema<IMember>(
     },
     email: {
       type: String,
-      required: [false, "Email is required"],
+      required: false,
       lowercase: true,
       match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, "Please enter a valid email"],
     },
@@ -57,7 +57,9 @@ const MemberSchema = new Schema<IMember>(
     },
     mobileNumber: {
       type: String,
-      required: [false, "Mobile number is required"],
+      required: [true, "Mobile number is required"], // Changed to required
+      unique: true, // Ensure uniqueness
+      index: true,
       match: [/^[0-9]{10}$/, "Please enter a valid 10-digit mobile number"],
     },
     isWhatsAppSame: {
@@ -108,7 +110,6 @@ const MemberSchema = new Schema<IMember>(
     },
     pincode: {
       type: String,
-
     },
     dateOfBirth: {
       type: Date,
@@ -193,66 +194,99 @@ const MemberSchema = new Schema<IMember>(
   },
 )
 
+// Add index for better unique constraint handling
+MemberSchema.index({ mobileNumber: 1 }, { unique: true });
+
 // Update the pre-save hook to handle new fields
-MemberSchema.pre("save", async function () {
-  if (!this.isNew) return
+MemberSchema.pre("save", async function (next) {
+  if (!this.isNew) return next()
 
-  // Calculate age from dateOfBirth if not provided
-  if (this.dateOfBirth && !this.age) {
-    const diff = Date.now() - this.dateOfBirth.getTime()
-    const ageDate = new Date(diff)
-    this.age = Math.abs(ageDate.getUTCFullYear() - 1970)
-  }
-
-  // Generate membership ID if not provided
-if (!this.membershipId) {
-  const year = new Date().getFullYear();
-
-  const lastMember = await mongoose.models.Member
-    .findOne({})
-    .sort({ createdAt: -1 }) // latest member
-    .select("membershipId");
-
-  let nextNumber = 200;
-
-  if (lastMember) {
-    const lastDigits = parseInt(lastMember.membershipId.slice(-6));
-    nextNumber = lastDigits + 1;
-  }
-
-  this.membershipId = `CGNP${year}${String(nextNumber).padStart(6, "0")}`;
-}
-
-
-  // Generate referral code if not provided
-  if (!this.referralCode) {
-    const generateCode = () => {
-      const initials = this.name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-      const random = Math.floor(Math.random() * 1000)
-        .toString()
-        .padStart(3, "0")
-      return `${initials}${random}`
+  try {
+    // Calculate age from dateOfBirth if not provided
+    if (this.dateOfBirth && !this.age) {
+      const diff = Date.now() - this.dateOfBirth.getTime()
+      const ageDate = new Date(diff)
+      this.age = Math.abs(ageDate.getUTCFullYear() - 1970)
     }
 
-    let code = generateCode()
-    let counter = 1
+    // Generate membership ID if not provided
+    if (!this.membershipId) {
+      const year = new Date().getFullYear();
 
-    while (await mongoose.models.Member.findOne({ referralCode: code })) {
-      code = `${generateCode()}${counter}`
-      counter++
+      const lastMember = await mongoose.models.Member
+        .findOne({})
+        .sort({ createdAt: -1 })
+        .select("membershipId");
+
+      let nextNumber = 200;
+
+      if (lastMember) {
+        const lastDigits = parseInt(lastMember.membershipId.slice(-6));
+        nextNumber = lastDigits + 1;
+      }
+
+      this.membershipId = `CGNP${year}${String(nextNumber).padStart(6, "0")}`;
     }
 
-    this.referralCode = code
-  }
+    // Generate referral code if not provided
+    if (!this.referralCode) {
+      const generateCode = () => {
+        const initials = this.name
+          .split(" ")
+          .map((n) => n[0])
+          .join("")
+          .toUpperCase()
+        const random = Math.floor(Math.random() * 1000)
+          .toString()
+          .padStart(3, "0")
+        return `${initials}${random}`
+      }
 
-  // Set WhatsApp number if same as mobile
-  if (this.isWhatsAppSame && !this.whatsappNumber) {
-    this.whatsappNumber = this.mobileNumber
+      let code = generateCode()
+      let counter = 1
+
+      while (await mongoose.models.Member.findOne({ referralCode: code })) {
+        code = `${generateCode()}${counter}`
+        counter++
+      }
+
+      this.referralCode = code
+    }
+
+    // Set WhatsApp number if same as mobile
+    if (this.isWhatsAppSame && !this.whatsappNumber) {
+      this.whatsappNumber = this.mobileNumber
+    }
+    
+    next()
+  } catch (error) {
+    next(error as Error)
   }
 })
+
+// Add a pre-save hook to validate mobile number uniqueness
+MemberSchema.pre("save", async function(next) {
+  try {
+    if (this.isModified('mobileNumber')) {
+      const existingMember = await mongoose.models.Member.findOne({
+        mobileNumber: this.mobileNumber,
+        _id: { $ne: this._id }
+      });
+      
+      if (existingMember) {
+        const error = new mongoose.Error.ValidationError();
+        error.errors.mobileNumber = new mongoose.Error.ValidatorError({
+          message: 'Mobile number already exists',
+          path: 'mobileNumber',
+          value: this.mobileNumber
+        });
+        return next(error);
+      }
+    }
+    next();
+  } catch (error) {
+    next(error as Error);
+  }
+});
 
 export default mongoose.models.Member || mongoose.model<IMember>("Member", MemberSchema)

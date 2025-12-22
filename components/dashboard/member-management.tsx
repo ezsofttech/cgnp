@@ -771,16 +771,40 @@
 
 // ----------1--------------
 
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Search, Users, Mail, Phone, MapPin, Calendar, CheckCircle, XCircle, Clock, ChevronLeft, ChevronRight, Download, Eye, FileDown, Trash2, UserPlus } from "lucide-react"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Search,
+  Users,
+  Mail,
+  Phone,
+  MapPin,
+  Calendar,
+  CheckCircle,
+  XCircle,
+  Clock,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Eye,
+  FileDown,
+  Trash2,
+  UserPlus,
+} from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -791,140 +815,126 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { useToast } from "@/components/ui/use-toast"
-import { Member } from "@/types"
-import { usePartyStore } from "@/lib/stores/party-store"
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/components/ui/use-toast";
+import { Member } from "@/types";
+import { usePartyStore } from "@/lib/stores/party-store";
+//import { usePartyStore } from "@/lib/store/usePartyStore" // Assuming your store is in this path
 
 interface MemberManagementProps {
-  initialMembers: Member[]
+  initialMembers: Member[];
   initialPagination: {
-    page: number
-    limit: number
-    total: number
-    pages: number
-  }
-  currentLeader?: any
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+  currentLeader?: any;
 }
 
-export function MemberManagement({ 
-  initialMembers = [], 
+export function MemberManagement({
+  initialMembers = [],
   initialPagination = { page: 1, limit: 10, total: 0, pages: 1 },
-  currentLeader 
+  currentLeader,
 }: MemberManagementProps) {
-  const [members, setMembers] = useState<Member[]>(initialMembers)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
-  const [pagination, setPagination] = useState(initialPagination)
-  const [loading, setLoading] = useState(false)
-  const [exportLoading, setExportLoading] = useState(false)
-  const [deleteLoading, setDeleteLoading] = useState<string | null>(null)
-  const router = useRouter()
-  const { toast } = useToast()
-  
+  const [members, setMembers] = useState<Member[]>(initialMembers);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [pagination, setPagination] = useState(initialPagination);
+  const [loading, setLoading] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
+  const router = useRouter();
+  const { toast } = useToast();
+  const [startDate, setStartDate] = useState("");
+const [endDate, setEndDate] = useState("");
+
+
   // Get the deleteMember function from Zustand store
-  const { deleteMember } = usePartyStore()
+  const { deleteMember } = usePartyStore();
 
   const canManageMembers =
-    currentLeader?.permissions?.includes("manage_members") || 
-    currentLeader?.permissions?.includes("admin_access")
+    currentLeader?.permissions?.includes("manage_members") ||
+    currentLeader?.permissions?.includes("admin_access");
 
   const canDeleteMembers =
-    currentLeader?.role === "party_admin" || 
-    currentLeader?.permissions?.includes("delete_members")
+    currentLeader?.role === "party_admin" ||
+    currentLeader?.permissions?.includes("delete_members");
 
   useEffect(() => {
-    fetchMembers()
-  }, [pagination.page, pagination.limit, statusFilter])
+    fetchMembers();
+  }, [pagination.page, pagination.limit, statusFilter, searchTerm]);
 
   const fetchMembers = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const params = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
         ...(statusFilter !== "all" && { status: statusFilter }),
         ...(searchTerm && { search: searchTerm }),
-      })
+      });
 
-      const response = await fetch(`/api/members?${params}`)
-      const data = await response.json()
+      const response = await fetch(`/api/members?${params}`);
+      const data = await response.json();
 
       if (response.ok) {
         // Set all members to active status by default
-        const membersWithDefaultStatus = (data.members || []).map((member: Member) => ({
-          ...member,
-          status: member.status || "active" // Default to active if no status is set
-        }))
-        setMembers(membersWithDefaultStatus)
-        setPagination(data.pagination)
+        const membersWithDefaultStatus = (data.members || []).map(
+          (member: Member) => ({
+            ...member,
+            status: member.status || "active", // Default to active if no status is set
+          })
+        );
+        setMembers(membersWithDefaultStatus);
+        setPagination(data.pagination);
       }
     } catch (error) {
-      console.error("Error fetching members:", error)
+      console.error("Error fetching members:", error);
       toast({
         title: "Error",
         description: "Failed to fetch members",
         variant: "destructive",
-      })
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleDeleteMember = async (memberId: string, memberName: string) => {
     try {
-      setDeleteLoading(memberId)
-      
-      const result = await deleteMember(memberId)
-      
+      setDeleteLoading(memberId);
+
+      const result = await deleteMember(memberId);
+
       if (result.success) {
-        // Calculate new pagination values
-        const newTotal = pagination.total - 1
-        const newPages = Math.ceil(newTotal / pagination.limit)
-        
-        // Adjust current page if needed (if we deleted the last item on the current page)
-        let newPage = pagination.page
-        if (members.length === 1 && pagination.page > 1) {
-          // If this was the last item on the page, go to previous page
-          newPage = Math.max(1, pagination.page - 1)
-        }
-        
-        // Update pagination
-        setPagination(prev => ({ 
-          ...prev, 
-          total: newTotal,
-          pages: newPages,
-          page: newPage
-        }))
-        
-        // If we changed pages, fetchMembers will be triggered by useEffect
-        // Otherwise, update local state immediately
-        if (newPage === pagination.page) {
-          setMembers(prev => prev.filter(member => member._id !== memberId))
-        }
-        
+        // Update local state to remove the deleted member
+        setMembers((prev) => prev.filter((member) => member._id !== memberId));
+        // Update pagination total
+        setPagination((prev) => ({ ...prev, total: prev.total - 1 }));
+
         toast({
           title: "Success",
           description: `Member "${memberName}" has been deleted successfully`,
-        })
+        });
       } else {
         toast({
           title: "Error",
           description: result.error || "Failed to delete member",
           variant: "destructive",
-        })
+        });
       }
     } catch (error) {
-      console.error("Error in handleDeleteMember:", error)
+      console.error("Error in handleDeleteMember:", error);
       toast({
         title: "Error",
         description: "An unexpected error occurred",
         variant: "destructive",
-      })
+      });
     } finally {
-      setDeleteLoading(null)
+      setDeleteLoading(null);
     }
-  }
+  };
 
   const handleStatusUpdate = async (memberId: string, newStatus: string) => {
     try {
@@ -934,276 +944,331 @@ export function MemberManagement({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ status: newStatus }),
-      })
+      });
 
       if (response.ok) {
-        // Update local state immediately
-        setMembers(prev => prev.map(member => 
-          member._id === memberId ? { ...member, status: newStatus } : member
-        ))
+        fetchMembers(); // Refresh the data
         toast({
           title: "Success",
           description: "Member status updated successfully",
-        })
+        });
       }
     } catch (error) {
-      console.error("Error updating member status:", error)
+      console.error("Error updating member status:", error);
       toast({
         title: "Error",
         description: "Failed to update member status",
         variant: "destructive",
-      })
+      });
     }
-  }
+  };
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= pagination.pages) {
-      setPagination(prev => ({ ...prev, page: newPage }))
+      setPagination((prev) => ({ ...prev, page: newPage }));
     }
-  }
+  };
 
   const handleLimitChange = (newLimit: number) => {
-    setPagination(prev => ({ ...prev, limit: newLimit, page: 1 }))
-  }
+    setPagination((prev) => ({ ...prev, limit: newLimit, page: 1 }));
+  };
 
   const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    setPagination(prev => ({ ...prev, page: 1 }))
-  }
+    e.preventDefault();
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  };
 
   const handleViewMember = (memberId: string) => {
-    window.open(`/members/${memberId}`, "_blank", "noopener,noreferrer")
-  }
+    window.open(`/members/${memberId}`, "_blank", "noopener,noreferrer");
+  };
 
   const handleAddMember = () => {
-    router.push("/members/new")
-  }
+    router.push("/members/new");
+  };
 
   const exportAllMembers = async () => {
     try {
-      setExportLoading(true)
-      
+      setExportLoading(true);
+
       // Build query parameters for export
       const params = new URLSearchParams({
         export: "all",
+        ...(startDate && { startDate }),
+        ...(endDate && { endDate }),
         ...(statusFilter !== "all" && { status: statusFilter }),
         ...(searchTerm && { search: searchTerm }),
-      })
-
-      const response = await fetch(`/api/members?${params}`)
-      const data = await response.json()
+      });
+      
+      const response = await fetch(`/api/members?${params}`);
+      const data = await response.json();
 
       if (response.ok && data.members) {
         // Create CSV content with all fields
         const headers = [
-          "Name", 
-          "Email", 
-          "Mobile Number", 
-          "WhatsApp Number", 
+          "Name",
+          "Email",
+          "Mobile Number",
+          "WhatsApp Number",
           "Is WhatsApp Same",
-          "Address", 
-          "District", 
-          "Lok Sabha Constituency", 
-          "Vidhan Sabha Constituency", 
-          "Ward", 
-          "Tehsil", 
-          "Age", 
-          "Gender", 
-          "Member Type", 
-          "Occupation", 
-          "Membership ID", 
+          "Address",
+          "District",
+          "Lok Sabha Constituency",
+          "Vidhan Sabha Constituency",
+          "Ward",
+          "Tehsil",
+          "Age",
+          "Gender",
+          "Member Type",
+          "Occupation",
+          "Membership ID",
           "Referral Code",
           "Referred By",
-          "Joined Date", 
-          "Status", 
-          "Is Volunteer", 
+          "Joined Date",
+          "Status",
+          "Is Volunteer",
           "Volunteer Skills",
           "Additional Info",
           "Social Media - Facebook",
-          "Social Media - Twitter", 
+          "Social Media - Twitter",
           "Social Media - Instagram",
           "Created At",
-          "Updated At"
-        ]
-        
+          "Updated At",
+        ];
+
         const csvContent = [
           headers.join(","),
-          ...data.members.map((member: Member) => [
-            `"${member.name || ''}"`,
-            `"${member.email || ''}"`,
-            `"${member.mobileNumber || ''}"`,
-            `"${member.whatsappNumber || ''}"`,
-            `"${member.isWhatsAppSame ? 'Yes' : 'No'}"`,
-            `"${(member.address || '').replace(/"/g, '""')}"`,
-            `"${member.district || ''}"`,
-            `"${member.lokSabha || ''}"`,
-            `"${member.vidhanSabha || ''}"`,
-            `"${member.ward || ''}"`,
-            `"${member.tehsil || ''}"`,
-            `"${member.age || ''}"`,
-            `"${member.gender || ''}"`,
-            `"${member.memberType || ''}"`,
-            `"${member.occupation || ''}"`,
-            `"${member.membershipId || ''}"`,
-            `"${member.referralCode || ''}"`,
-            `"${member.referredBy ? (typeof member.referredBy === 'object' ? member.referredBy.name : member.referredBy) : ''}"`,
-            `"${member.joinedDate ? new Date(member.joinedDate).toLocaleDateString("en-IN") : ''}"`,
-            `"${member.status || 'active'}"`, // Default to active for export as well
-            `"${member.isVolunteer ? "Yes" : "No"}"`,
-            `"${member.volunteerSkills?.join(', ') || ''}"`,
-            `"${(member.additionalInfo || '').replace(/"/g, '""')}"`,
-            `"${member.socialMedia?.facebook || ''}"`,
-            `"${member.socialMedia?.twitter || ''}"`,
-            `"${member.socialMedia?.instagram || ''}"`,
-            `"${member.createdAt ? new Date(member.createdAt).toLocaleDateString("en-IN") : ''}"`,
-            `"${member.updatedAt ? new Date(member.updatedAt).toLocaleDateString("en-IN") : ''}"`
-          ].join(","))
-        ].join("\n")
+          ...data.members.map((member: Member) =>
+            [
+              `"${member.name || ""}"`,
+              `"${member.email || ""}"`,
+              `"${member.mobileNumber || ""}"`,
+              `"${member.whatsappNumber || ""}"`,
+              `"${member.isWhatsAppSame ? "Yes" : "No"}"`,
+              `"${(member.address || "").replace(/"/g, '""')}"`,
+              `"${member.district || ""}"`,
+              `"${member.lokSabha || ""}"`,
+              `"${member.vidhanSabha || ""}"`,
+              `"${member.ward || ""}"`,
+              `"${member.tehsil || ""}"`,
+              `"${member.age || ""}"`,
+              `"${member.gender || ""}"`,
+              `"${member.memberType || ""}"`,
+              `"${member.occupation || ""}"`,
+              `"${member.membershipId || ""}"`,
+              `"${member.referralCode || ""}"`,
+              `"${
+                member.referredBy
+                  ? typeof member.referredBy === "object"
+                    ? member.referredBy.name
+                    : member.referredBy
+                  : ""
+              }"`,
+              `"${
+                member.joinedDate
+                  ? new Date(member.joinedDate).toLocaleDateString("en-IN")
+                  : ""
+              }"`,
+              `"${member.status || "active"}"`, // Default to active for export as well
+              `"${member.isVolunteer ? "Yes" : "No"}"`,
+              `"${member.volunteerSkills?.join(", ") || ""}"`,
+              `"${(member.additionalInfo || "").replace(/"/g, '""')}"`,
+              `"${member.socialMedia?.facebook || ""}"`,
+              `"${member.socialMedia?.twitter || ""}"`,
+              `"${member.socialMedia?.instagram || ""}"`,
+              `"${
+                member.createdAt
+                  ? new Date(member.createdAt).toLocaleDateString("en-IN")
+                  : ""
+              }"`,
+              `"${
+                member.updatedAt
+                  ? new Date(member.updatedAt).toLocaleDateString("en-IN")
+                  : ""
+              }"`,
+            ].join(",")
+          ),
+        ].join("\n");
 
         // Create and download file
-        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-        const link = document.createElement("a")
-        const url = URL.createObjectURL(blob)
-        link.setAttribute("href", url)
-        link.setAttribute("download", `all-members-${new Date().toISOString().split('T')[0]}.csv`)
-        link.style.visibility = "hidden"
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        
+        const BOM = "\uFEFF"; // UTF-8 BOM
+        const blob = new Blob([BOM + csvContent], {
+          type: "text/csv;charset=utf-8",
+        });
+
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute(
+          "download",
+          `all-members-${new Date().toISOString().split("T")[0]}.csv`
+        );
+        link.style.visibility = "hidden";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
         toast({
           title: "Success",
           description: "All members exported successfully",
-        })
+        });
       } else {
-        throw new Error("Failed to fetch members for export")
+        throw new Error("Failed to fetch members for export");
       }
     } catch (error) {
-      console.error("Error exporting all members:", error)
+      console.error("Error exporting all members:", error);
       toast({
         title: "Error",
         description: "Failed to export members",
         variant: "destructive",
-      })
+      });
     } finally {
-      setExportLoading(false)
+      setExportLoading(false);
     }
-  }
+  };
 
   const exportSingleMemberToExcel = async (member: Member) => {
     try {
       // Create CSV content for single member with all fields
       const headers = [
-        "Name", 
-        "Email", 
-        "Mobile Number", 
-        "WhatsApp Number", 
+        "Name",
+        "Email",
+        "Mobile Number",
+        "WhatsApp Number",
         "Is WhatsApp Same",
-        "Address", 
-        "District", 
-        "Lok Sabha Constituency", 
-        "Vidhan Sabha Constituency", 
-        "Ward", 
-        "Tehsil", 
-        "Age", 
-        "Gender", 
-        "Member Type", 
-        "Occupation", 
-        "Membership ID", 
+        "Address",
+        "District",
+        "Lok Sabha Constituency",
+        "Vidhan Sabha Constituency",
+        "Ward",
+        "Tehsil",
+        "Age",
+        "Gender",
+        "Member Type",
+        "Occupation",
+        "Membership ID",
         "Referral Code",
         "Referred By",
-        "Joined Date", 
-        "Status", 
-        "Is Volunteer", 
+        "Joined Date",
+        "Status",
+        "Is Volunteer",
         "Volunteer Skills",
         "Additional Info",
         "Social Media - Facebook",
-        "Social Media - Twitter", 
+        "Social Media - Twitter",
         "Social Media - Instagram",
         "Created At",
-        "Updated At"
-      ]
-      
+        "Updated At",
+      ];
+
       const csvContent = [
         headers.join(","),
         [
-          `"${member.name || ''}"`,
-          `"${member.email || ''}"`,
-          `"${member.mobileNumber || ''}"`,
-          `"${member.whatsappNumber || ''}"`,
-          `"${member.isWhatsAppSame ? 'Yes' : 'No'}"`,
-          `"${(member.address || '').replace(/"/g, '""')}"`,
-          `"${member.district || ''}"`,
-          `"${member.lokSabha || ''}"`,
-          `"${member.vidhanSabha || ''}"`,
-          `"${member.ward || ''}"`,
-          `"${member.tehsil || ''}"`,
-          `"${member.age || ''}"`,
-          `"${member.gender || ''}"`,
-          `"${member.memberType || ''}"`,
-          `"${member.occupation || ''}"`,
-          `"${member.membershipId || ''}"`,
-          `"${member.referralCode || ''}"`,
-          `"${member.referredBy ? (typeof member.referredBy === 'object' ? member.referredBy.name : member.referredBy) : ''}"`,
-          `"${member.joinedDate ? new Date(member.joinedDate).toLocaleDateString("en-IN") : ''}"`,
-          `"${member.status || 'active'}"`, // Default to active for single export as well
+          `"${member.name || ""}"`,
+          `"${member.email || ""}"`,
+          `"${member.mobileNumber || ""}"`,
+          `"${member.whatsappNumber || ""}"`,
+          `"${member.isWhatsAppSame ? "Yes" : "No"}"`,
+          `"${(member.address || "").replace(/"/g, '""')}"`,
+          `"${member.district || ""}"`,
+          `"${member.lokSabha || ""}"`,
+          `"${member.vidhanSabha || ""}"`,
+          `"${member.ward || ""}"`,
+          `"${member.tehsil || ""}"`,
+          `"${member.age || ""}"`,
+          `"${member.gender || ""}"`,
+          `"${member.memberType || ""}"`,
+          `"${member.occupation || ""}"`,
+          `"${member.membershipId || ""}"`,
+          `"${member.referralCode || ""}"`,
+          `"${
+            member.referredBy
+              ? typeof member.referredBy === "object"
+                ? member.referredBy.name
+                : member.referredBy
+              : ""
+          }"`,
+          `"${
+            member.joinedDate
+              ? new Date(member.joinedDate).toLocaleDateString("en-IN")
+              : ""
+          }"`,
+          `"${member.status || "active"}"`, // Default to active for single export as well
           `"${member.isVolunteer ? "Yes" : "No"}`,
-          `"${member.volunteerSkills?.join(', ') || ''}"`,
-          `"${(member.additionalInfo || '').replace(/"/g, '""')}"`,
-          `"${member.socialMedia?.facebook || ''}"`,
-          `"${member.socialMedia?.twitter || ''}"`,
-          `"${member.socialMedia?.instagram || ''}"`,
-          `"${member.createdAt ? new Date(member.createdAt).toLocaleDateString("en-IN") : ''}"`,
-          `"${member.updatedAt ? new Date(member.updatedAt).toLocaleDateString("en-IN") : ''}"`
-        ].join(",")
-      ].join("\n")
+          `"${member.volunteerSkills?.join(", ") || ""}"`,
+          `"${(member.additionalInfo || "").replace(/"/g, '""')}"`,
+          `"${member.socialMedia?.facebook || ""}"`,
+          `"${member.socialMedia?.twitter || ""}"`,
+          `"${member.socialMedia?.instagram || ""}"`,
+          `"${
+            member.createdAt
+              ? new Date(member.createdAt).toLocaleDateString("en-IN")
+              : ""
+          }"`,
+          `"${
+            member.updatedAt
+              ? new Date(member.updatedAt).toLocaleDateString("en-IN")
+              : ""
+          }"`,
+        ].join(","),
+      ].join("\n");
 
       // Create and download file
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-      const link = document.createElement("a")
-      const url = URL.createObjectURL(blob)
-      link.setAttribute("href", url)
-      link.setAttribute("download", `member-${member.membershipId || member.name}-${new Date().toISOString().split('T')[0]}.csv`)
-      link.style.visibility = "hidden"
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      
+      const BOM = "\uFEFF";
+      const blob = new Blob([BOM + csvContent], {
+        type: "text/csv;charset=utf-8",
+      });
+
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute(
+        "download",
+        `member-${member.membershipId || member.name}-${
+          new Date().toISOString().split("T")[0]
+        }.csv`
+      );
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
       toast({
         title: "Success",
         description: "Member exported successfully",
-      })
+      });
     } catch (error) {
-      console.error("Error exporting single member:", error)
+      console.error("Error exporting single member:", error);
       toast({
         title: "Error",
         description: "Failed to export member",
         variant: "destructive",
-      })
+      });
     }
-  }
+  };
 
   const getStatusBadgeColor = (status: string) => {
     const colors = {
       active: "bg-green-100 text-green-800",
       pending: "bg-yellow-100 text-yellow-800",
       inactive: "bg-gray-100 text-gray-800",
-    }
-    return colors[status as keyof typeof colors] || "bg-green-100 text-green-800" // Default to active color
-  }
+    };
+    return (
+      colors[status as keyof typeof colors] || "bg-green-100 text-green-800"
+    ); // Default to active color
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "active":
-        return <CheckCircle className="h-4 w-4 text-green-600" />
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
       case "pending":
-        return <Clock className="h-4 w-4 text-yellow-600" />
+        return <Clock className="h-4 w-4 text-yellow-600" />;
       case "inactive":
-        return <XCircle className="h-4 w-4 text-gray-600" />
+        return <XCircle className="h-4 w-4 text-gray-600" />;
       default:
-        return <CheckCircle className="h-4 w-4 text-green-600" /> // Default to active icon
+        return <CheckCircle className="h-4 w-4 text-green-600" />; // Default to active icon
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -1212,7 +1277,7 @@ export function MemberManagement({
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -1221,13 +1286,19 @@ export function MemberManagement({
         <CardHeader>
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <CardTitle className="text-xl text-gray-900">Member Management</CardTitle>
-              <p className="text-sm text-gray-600">View and manage your referred members</p>
+              <CardTitle className="text-xl text-gray-900">
+                Member Management
+              </CardTitle>
+              <p className="text-sm text-gray-600">
+                View and manage your referred members
+              </p>
             </div>
             <div className="flex flex-col md:flex-row items-start md:items-center gap-4 text-sm text-gray-600">
               <div className="flex gap-4">
                 <span>Total: {pagination.total}</span>
-                <span>Page: {pagination.page} of {pagination.pages}</span>
+                <span>
+                  Page: {pagination.page} of {pagination.pages}
+                </span>
               </div>
               {canManageMembers && (
                 <div className="flex gap-2">
@@ -1260,7 +1331,10 @@ export function MemberManagement({
         <CardContent>
           <div className="space-y-4">
             <div className="flex flex-col md:flex-row gap-4 justify-between">
-              <form onSubmit={handleSearch} className="flex items-center space-x-2 flex-1">
+              <form
+                onSubmit={handleSearch}
+                className="flex items-center space-x-2 flex-1"
+              >
                 <Search className="h-4 w-4 text-gray-400" />
                 <Input
                   placeholder="Search members by name, email, phone, or location..."
@@ -1274,6 +1348,18 @@ export function MemberManagement({
               </form>
 
               <div className="flex items-center gap-2">
+                {/* {canManageMembers && (
+                  <Button
+                    onClick={handleAddMember}
+                    variant="default"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    Add Member
+                  </Button>
+                )} */}
+
                 <Button
                   onClick={exportAllMembers}
                   disabled={exportLoading || pagination.total === 0}
@@ -1284,7 +1370,21 @@ export function MemberManagement({
                   <Download className="h-4 w-4" />
                   {exportLoading ? "Exporting..." : `Export All `}
                 </Button>
-                
+                <div className="flex items-center gap-2">
+  <Input
+    type="date"
+    value={startDate}
+    onChange={(e) => setStartDate(e.target.value)}
+  />
+
+  <Input
+    type="date"
+    value={endDate}
+    onChange={(e) => setEndDate(e.target.value)}
+  />
+</div>
+
+
                 <div className="flex items-center space-x-2">
                   <span className="text-sm text-gray-600">Show:</span>
                   <select
@@ -1309,8 +1409,12 @@ export function MemberManagement({
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900">{member.name}</h3>
-                        <p className="text-sm text-gray-600">ID: {member.membershipId}</p>
+                        <h3 className="font-semibold text-gray-900">
+                          {member.name}
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          ID: {member.membershipId}
+                        </p>
                       </div>
                       <div className="flex flex-col items-end space-y-1">
                         {member.isVolunteer && (
@@ -1338,7 +1442,13 @@ export function MemberManagement({
                       </div>
                       <div className="flex items-center">
                         <Calendar className="h-4 w-4 mr-2" />
-                        <span>{member.joinedDate ? new Date(member.joinedDate).toLocaleDateString("en-IN") : 'N/A'}</span>
+                        <span>
+                          {member.joinedDate
+                            ? new Date(member.joinedDate).toLocaleDateString(
+                                "en-IN"
+                              )
+                            : "N/A"}
+                        </span>
                       </div>
                     </div>
 
@@ -1376,17 +1486,26 @@ export function MemberManagement({
                             <AlertDialogHeader>
                               <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                               <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete member 
-                                <span className="font-semibold"> "{member.name}"</span> with ID: {member.membershipId}.
+                                This action cannot be undone. This will
+                                permanently delete member
+                                <span className="font-semibold">
+                                  {" "}
+                                  "{member.name}"
+                                </span>{" "}
+                                with ID: {member.membershipId}.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Cancel</AlertDialogCancel>
                               <AlertDialogAction
-                                onClick={() => handleDeleteMember(member._id, member.name)}
+                                onClick={() =>
+                                  handleDeleteMember(member._id, member.name)
+                                }
                                 className="bg-red-600 hover:bg-red-700"
                               >
-                                {deleteLoading === member._id ? "Deleting..." : "Delete Member"}
+                                {deleteLoading === member._id
+                                  ? "Deleting..."
+                                  : "Delete Member"}
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
@@ -1397,7 +1516,7 @@ export function MemberManagement({
                 </Card>
               ))}
             </div>
-            
+
             {/* Desktop Table View */}
             <div className="hidden md:block">
               <Table>
@@ -1417,13 +1536,17 @@ export function MemberManagement({
                       <TableCell>
                         <div>
                           <div className="font-medium">{member.name}</div>
-                          <div className="text-sm text-gray-500">ID: {member.membershipId}</div>
+                          <div className="text-sm text-gray-500">
+                            ID: {member.membershipId}
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="text-sm">
                           <div>{member.email}</div>
-                          <div className="text-gray-500">{member.mobileNumber || member.phone}</div>
+                          <div className="text-gray-500">
+                            {member.mobileNumber || member.phone}
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -1432,7 +1555,13 @@ export function MemberManagement({
                           <div className="text-gray-500">{member.state}</div>
                         </div>
                       </TableCell>
-                      <TableCell>{member.joinedDate ? new Date(member.joinedDate).toLocaleDateString("en-IN") : 'N/A'}</TableCell>
+                      <TableCell>
+                        {member.joinedDate
+                          ? new Date(member.joinedDate).toLocaleDateString(
+                              "en-IN"
+                            )
+                          : "N/A"}
+                      </TableCell>
                       <TableCell>
                         {member.isVolunteer ? (
                           <Badge variant="outline">Volunteer</Badge>
@@ -1450,6 +1579,15 @@ export function MemberManagement({
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
+
+                          {/* <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => exportSingleMemberToExcel(member)}
+                            title="Export to Excel"
+                          >
+                            <FileDown className="h-4 w-4" />
+                          </Button> */}
 
                           {canDeleteMembers && (
                             <AlertDialog>
@@ -1469,20 +1607,34 @@ export function MemberManagement({
                               </AlertDialogTrigger>
                               <AlertDialogContent>
                                 <AlertDialogHeader>
-                                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                  <AlertDialogTitle>
+                                    Are you absolutely sure?
+                                  </AlertDialogTitle>
                                   <AlertDialogDescription>
-                                    This action cannot be undone. This will permanently delete the member
-                                    <span className="font-semibold"> "{member.name}"</span> (ID: {member.membershipId})
-                                    from the database.
+                                    This action cannot be undone. This will
+                                    permanently delete the member
+                                    <span className="font-semibold">
+                                      {" "}
+                                      "{member.name}"
+                                    </span>{" "}
+                                    (ID: {member.membershipId}) from the
+                                    database.
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Cancel</AlertDialogCancel>
                                   <AlertDialogAction
-                                    onClick={() => handleDeleteMember(member._id, member.name)}
+                                    onClick={() =>
+                                      handleDeleteMember(
+                                        member._id,
+                                        member.name
+                                      )
+                                    }
                                     className="bg-red-600 hover:bg-red-700"
                                   >
-                                    {deleteLoading === member._id ? "Deleting..." : "Delete"}
+                                    {deleteLoading === member._id
+                                      ? "Deleting..."
+                                      : "Delete"}
                                   </AlertDialogAction>
                                 </AlertDialogFooter>
                               </AlertDialogContent>
@@ -1499,9 +1651,9 @@ export function MemberManagement({
             {/* Pagination Controls */}
             <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-4">
               <div className="text-sm text-gray-600">
-                Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
-                {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
-                {pagination.total} members
+                Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
+                {Math.min(pagination.page * pagination.limit, pagination.total)}{" "}
+                of {pagination.total} members
               </div>
               <div className="flex items-center space-x-2">
                 <Button
@@ -1514,40 +1666,47 @@ export function MemberManagement({
                   Previous
                 </Button>
                 <div className="flex items-center space-x-1">
-                  {Array.from({ length: Math.min(5, pagination.pages) }, (_, i) => {
-                    let pageNum
-                    if (pagination.pages <= 5) {
-                      pageNum = i + 1
-                    } else if (pagination.page <= 3) {
-                      pageNum = i + 1
-                    } else if (pagination.page >= pagination.pages - 2) {
-                      pageNum = pagination.pages - 4 + i
-                    } else {
-                      pageNum = pagination.page - 2 + i
+                  {Array.from(
+                    { length: Math.min(5, pagination.pages) },
+                    (_, i) => {
+                      let pageNum;
+                      if (pagination.pages <= 5) {
+                        pageNum = i + 1;
+                      } else if (pagination.page <= 3) {
+                        pageNum = i + 1;
+                      } else if (pagination.page >= pagination.pages - 2) {
+                        pageNum = pagination.pages - 4 + i;
+                      } else {
+                        pageNum = pagination.page - 2 + i;
+                      }
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={
+                            pagination.page === pageNum ? "default" : "outline"
+                          }
+                          size="sm"
+                          onClick={() => handlePageChange(pageNum)}
+                        >
+                          {pageNum}
+                        </Button>
+                      );
                     }
-                    return (
+                  )}
+                  {pagination.pages > 5 &&
+                    pagination.page < pagination.pages - 2 && (
+                      <span className="px-2">...</span>
+                    )}
+                  {pagination.pages > 5 &&
+                    pagination.page < pagination.pages - 2 && (
                       <Button
-                        key={pageNum}
-                        variant={pagination.page === pageNum ? "default" : "outline"}
+                        variant="outline"
                         size="sm"
-                        onClick={() => handlePageChange(pageNum)}
+                        onClick={() => handlePageChange(pagination.pages)}
                       >
-                        {pageNum}
+                        {pagination.pages}
                       </Button>
-                    )
-                  })}
-                  {pagination.pages > 5 && pagination.page < pagination.pages - 2 && (
-                    <span className="px-2">...</span>
-                  )}
-                  {pagination.pages > 5 && pagination.page < pagination.pages - 2 && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(pagination.pages)}
-                    >
-                      {pagination.pages}
-                    </Button>
-                  )}
+                    )}
                 </div>
                 <Button
                   variant="outline"
@@ -1566,7 +1725,9 @@ export function MemberManagement({
                 <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                 <p className="text-gray-500 text-lg mb-2">No members found</p>
                 <p className="text-gray-400 text-sm">
-                  {searchTerm ? "Try adjusting your search terms" : "No members have been referred yet"}
+                  {searchTerm
+                    ? "Try adjusting your search terms"
+                    : "No members have been referred yet"}
                 </p>
                 {canManageMembers && (
                   <Button
@@ -1584,5 +1745,5 @@ export function MemberManagement({
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
