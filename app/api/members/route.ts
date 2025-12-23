@@ -156,6 +156,17 @@ export async function POST(request: NextRequest) {
 
     const memberData = await request.json()
 
+    // Normalize isWhatsAppSame to boolean
+    if (memberData.isWhatsAppSame !== undefined) {
+      memberData.isWhatsAppSame = memberData.isWhatsAppSame === true || memberData.isWhatsAppSame === "true";
+    }
+
+    // If WhatsApp is same as mobile, clear whatsappNumber (will be set in pre-save hook)
+    if (memberData.isWhatsAppSame === true && memberData.mobileNumber) {
+      // Clear whatsappNumber so validation passes - pre-save hook will set it
+      memberData.whatsappNumber = undefined;
+    }
+
     // If referredBy is provided, validate the referral code
     if (memberData.referredBy) {
       const referrer = await Leader.findOne({ referralCode: memberData.referredBy })

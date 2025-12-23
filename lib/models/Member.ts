@@ -68,12 +68,34 @@ const MemberSchema = new Schema<IMember>(
     whatsappNumber: {
       type: String,
       validate: {
-        validator: function(this: IMember, v: string) {
-          return this.isWhatsAppSame || v?.length > 0
+        validator: function(this: IMember, v: string | undefined) {
+          // Normalize isWhatsAppSame (handle string "true"/"false" or boolean)
+          const isSame = this.isWhatsAppSame === true || this.isWhatsAppSame === "true";
+          
+          // If WhatsApp is same as mobile, skip validation (will be set in pre-save hook)
+          if (isSame) {
+            return true;
+          }
+          // If WhatsApp is not same as mobile, it must be provided and valid
+          const value = v?.trim();
+          if (!value || value.length === 0) {
+            return false;
+          }
+          // Validate format: must be exactly 10 digits
+          return /^[0-9]{10}$/.test(value);
         },
-        message: "WhatsApp number is required when not same as mobile number"
+        message: function(this: IMember) {
+          const isSame = this.isWhatsAppSame === true || this.isWhatsAppSame === "true";
+          if (isSame) {
+            return "WhatsApp number will be set from mobile number";
+          }
+          const value = this.whatsappNumber?.trim();
+          if (!value || value.length === 0) {
+            return "WhatsApp number is required when not same as mobile number";
+          }
+          return "Please enter a valid 10-digit WhatsApp number";
+        }
       },
-      match: [/^[0-9]{10}$/, "Please enter a valid 10-digit WhatsApp number"],
     },
     address: {
       type: String,
@@ -197,6 +219,13 @@ const MemberSchema = new Schema<IMember>(
 MemberSchema.pre("save", async function() {
   const member = this as IMember;
   
+  // Normalize isWhatsAppSame and set WhatsApp number if same as mobile (for both new and updates)
+  const isWhatsAppSame = member.isWhatsAppSame === true || member.isWhatsAppSame === "true";
+  if (isWhatsAppSame && member.mobileNumber) {
+    // Always set whatsappNumber from mobileNumber when isWhatsAppSame is true
+    member.whatsappNumber = member.mobileNumber;
+  }
+
   // Only run for new documents
   if (!member.isNew) {
     // For updates, just check mobile uniqueness if modified
@@ -287,11 +316,6 @@ MemberSchema.pre("save", async function() {
       }
     }
   }
-
-  // Set WhatsApp number if same as mobile
-              if (member.isWhatsAppSame && !member.whatsappNumber) {
-                member.whatsappNumber = member.mobileNumber;
-              }
 
   // Check mobile uniqueness
   const existingMember = await mongoose.models.Member.findOne({
