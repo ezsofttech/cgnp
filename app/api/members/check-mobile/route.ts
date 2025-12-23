@@ -16,6 +16,14 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Validate mobile number format
+    if (!/^[0-9]{10}$/.test(mobileNumber)) {
+      return NextResponse.json(
+        { error: "Please enter a valid 10-digit mobile number" },
+        { status: 400 }
+      )
+    }
+
     // Check if mobile number exists
     const existingMember = await Member.findOne({ mobileNumber })
     

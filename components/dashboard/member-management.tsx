@@ -1537,7 +1537,7 @@ const [endDate, setEndDate] = useState("");
                         <div>
                           <div className="font-medium">{member.name}</div>
                           <div className="text-sm text-gray-500">
-                            ID: {member.membershipId}
+                            {/* ID: {member.membershipId} */}
                           </div>
                         </div>
                       </TableCell>
