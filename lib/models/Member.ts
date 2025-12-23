@@ -194,17 +194,18 @@ const MemberSchema = new Schema<IMember>(
 )
 
 // Update the pre-save hook to handle new fields
-MemberSchema.pre("save", function(next) {
+MemberSchema.pre("save", async function() {
   const member = this as IMember;
   
   // Only run for new documents
   if (!member.isNew) {
     // For updates, just check mobile uniqueness if modified
     if (member.isModified('mobileNumber')) {
-      mongoose.models.Member.findOne({
+      const existingMember = await mongoose.models.Member.findOne({
         mobileNumber: member.mobileNumber,
         _id: { $ne: member._id }
-      }).lean().then((existingMember: any) => {
+      }).lean();
+      
         if (existingMember) {
           const error = new mongoose.Error.ValidationError();
           error.errors.mobileNumber = new mongoose.Error.ValidatorError({
@@ -212,12 +213,8 @@ MemberSchema.pre("save", function(next) {
             path: 'mobileNumber',
             value: member.mobileNumber
           });
-          return next(error);
+        throw error;
         }
-        next();
-      }).catch(next);
-    } else {
-      next();
     }
     return;
   }
@@ -233,10 +230,11 @@ MemberSchema.pre("save", function(next) {
   if (!member.membershipId) {
     const year = new Date().getFullYear();
     
-    mongoose.models.Member.findOne(
+    const lastMember = await mongoose.models.Member.findOne(
       { membershipId: { $regex: `^CGNP${year}` } },
       { membershipId: 1 }
-    ).sort({ createdAt: -1 }).lean().then((lastMember: any) => {
+    ).sort({ createdAt: -1 }).lean();
+    
       let nextNumber = 200;
 
       if (lastMember?.membershipId) {
@@ -250,6 +248,7 @@ MemberSchema.pre("save", function(next) {
       }
 
       member.membershipId = `CGNP${year}${String(nextNumber).padStart(6, "0")}`;
+  }
 
       // Generate referral code if not provided
       if (!member.referralCode) {
@@ -272,177 +271,34 @@ MemberSchema.pre("save", function(next) {
         let attempts = 0;
         const maxAttempts = 10;
 
-        const checkCode = () => {
-          mongoose.models.Member.findOne({ referralCode: code }).lean().then((existing: any) => {
+    while (attempts < maxAttempts) {
+      const existing = await mongoose.models.Member.findOne({ referralCode: code }).lean();
             if (!existing) {
               member.referralCode = code.toUpperCase();
-              
-              // Set WhatsApp number if same as mobile
-              if (member.isWhatsAppSame && !member.whatsappNumber) {
-                member.whatsappNumber = member.mobileNumber;
-              }
-
-              // Check mobile uniqueness
-              mongoose.models.Member.findOne({
-                mobileNumber: member.mobileNumber,
-                _id: { $ne: member._id }
-              }).lean().then((existingMember: any) => {
-                if (existingMember) {
-                  const error = new mongoose.Error.ValidationError();
-                  error.errors.mobileNumber = new mongoose.Error.ValidatorError({
-                    message: 'Mobile number already exists',
-                    path: 'mobileNumber',
-                    value: member.mobileNumber
-                  });
-                  return next(error);
-                }
-                next();
-              }).catch(next);
-            } else {
+        break;
+      }
               attempts++;
               if (attempts < maxAttempts) {
                 code = generateCode();
-                checkCode();
               } else {
                 const timestamp = Date.now().toString().slice(-4);
                 code = `${code.slice(0, 6)}${timestamp}`;
                 member.referralCode = code.toUpperCase();
-                
-                if (member.isWhatsAppSame && !member.whatsappNumber) {
-                  member.whatsappNumber = member.mobileNumber;
-                }
-
-                mongoose.models.Member.findOne({
-                  mobileNumber: member.mobileNumber,
-                  _id: { $ne: member._id }
-                }).lean().then((existingMember: any) => {
-                  if (existingMember) {
-                    const error = new mongoose.Error.ValidationError();
-                    error.errors.mobileNumber = new mongoose.Error.ValidatorError({
-                      message: 'Mobile number already exists',
-                      path: 'mobileNumber',
-                      value: member.mobileNumber
-                    });
-                    return next(error);
-                  }
-                  next();
-                }).catch(next);
-              }
-            }
-          }).catch(next);
-        };
-        checkCode();
-      } else {
-        if (member.isWhatsAppSame && !member.whatsappNumber) {
-          member.whatsappNumber = member.mobileNumber;
-        }
-
-        mongoose.models.Member.findOne({
-          mobileNumber: member.mobileNumber,
-          _id: { $ne: member._id }
-        }).lean().then((existingMember: any) => {
-          if (existingMember) {
-            const error = new mongoose.Error.ValidationError();
-            error.errors.mobileNumber = new mongoose.Error.ValidatorError({
-              message: 'Mobile number already exists',
-              path: 'mobileNumber',
-              value: member.mobileNumber
-            });
-            return next(error);
-          }
-          next();
-        }).catch(next);
       }
-    }).catch(next);
-  } else {
-    if (!member.referralCode) {
-      // Same as above for referral code generation
-      const generateCode = () => {
-        const initials = member.name
-          ? member.name
-              .split(" ")
-              .map((n) => n[0])
-              .join("")
-              .toUpperCase()
-              .slice(0, 3)
-          : "MEM";
-        const random = Math.floor(Math.random() * 1000)
-          .toString()
-          .padStart(3, "0");
-        return `${initials}${random}`;
-      };
+    }
+  }
 
-      let code = generateCode();
-      let attempts = 0;
-      const maxAttempts = 10;
-
-      const checkCode = () => {
-        mongoose.models.Member.findOne({ referralCode: code }).lean().then((existing: any) => {
-          if (!existing) {
-            member.referralCode = code.toUpperCase();
-            
-            if (member.isWhatsAppSame && !member.whatsappNumber) {
-              member.whatsappNumber = member.mobileNumber;
-            }
-
-            mongoose.models.Member.findOne({
-              mobileNumber: member.mobileNumber,
-              _id: { $ne: member._id }
-            }).lean().then((existingMember: any) => {
-              if (existingMember) {
-                const error = new mongoose.Error.ValidationError();
-                error.errors.mobileNumber = new mongoose.Error.ValidatorError({
-                  message: 'Mobile number already exists',
-                  path: 'mobileNumber',
-                  value: member.mobileNumber
-                });
-                return next(error);
-              }
-              next();
-            }).catch(next);
-          } else {
-            attempts++;
-            if (attempts < maxAttempts) {
-              code = generateCode();
-              checkCode();
-            } else {
-              const timestamp = Date.now().toString().slice(-4);
-              code = `${code.slice(0, 6)}${timestamp}`;
-              member.referralCode = code.toUpperCase();
-              
+  // Set WhatsApp number if same as mobile
               if (member.isWhatsAppSame && !member.whatsappNumber) {
                 member.whatsappNumber = member.mobileNumber;
               }
 
-              mongoose.models.Member.findOne({
+  // Check mobile uniqueness
+  const existingMember = await mongoose.models.Member.findOne({
                 mobileNumber: member.mobileNumber,
                 _id: { $ne: member._id }
-              }).lean().then((existingMember: any) => {
-                if (existingMember) {
-                  const error = new mongoose.Error.ValidationError();
-                  error.errors.mobileNumber = new mongoose.Error.ValidatorError({
-                    message: 'Mobile number already exists',
-                    path: 'mobileNumber',
-                    value: member.mobileNumber
-                  });
-                  return next(error);
-                }
-                next();
-              }).catch(next);
-            }
-          }
-        }).catch(next);
-      };
-      checkCode();
-    } else {
-      if (member.isWhatsAppSame && !member.whatsappNumber) {
-        member.whatsappNumber = member.mobileNumber;
-      }
-
-      mongoose.models.Member.findOne({
-        mobileNumber: member.mobileNumber,
-        _id: { $ne: member._id }
-      }).lean().then((existingMember: any) => {
+  }).lean();
+  
         if (existingMember) {
           const error = new mongoose.Error.ValidationError();
           error.errors.mobileNumber = new mongoose.Error.ValidatorError({
@@ -450,11 +306,7 @@ MemberSchema.pre("save", function(next) {
             path: 'mobileNumber',
             value: member.mobileNumber
           });
-          return next(error);
-        }
-        next();
-      }).catch(next);
-    }
+    throw error;
   }
 });
 

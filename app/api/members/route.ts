@@ -4,11 +4,13 @@ import Member from "@/lib/models/Member"
 import Leader from "@/lib/models/Leader"
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET || JWT_SECRET.length < 32) {
-  console.error("FATAL: JWT_SECRET must be at least 32 characters long");
-  process.exit(1);
-}
+const getJwtSecret = () => {
+  const JWT_SECRET = process.env.JWT_SECRET;
+  if (!JWT_SECRET || JWT_SECRET.length < 32) {
+    throw new Error("JWT_SECRET must be at least 32 characters long. Please define it in .env.local");
+  }
+  return JWT_SECRET;
+};
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,7 +31,7 @@ export async function GET(request: NextRequest) {
     // 🧩 Step 2: Decode token to get leaderId and role
     let decoded: any;
     try {
-      decoded = jwt.verify(token, JWT_SECRET||"R4jP7nYjLwVg2Q0XH2xF0m3pPnlZ5a6yYF8vHtR8b+vOaL1+5KwTgRztUjJZr1Y9");
+      decoded = jwt.verify(token, getJwtSecret());
     } catch (err) {
       return NextResponse.json(
         { error: "Invalid or expired token" },
@@ -208,7 +210,7 @@ export async function DELETE(request: NextRequest) {
     // 🧩 Step 2: Decode token to get leaderId and role
     let decoded: any;
     try {
-      decoded = jwt.verify(token, JWT_SECRET||"R4jP7nYjLwVg2Q0XH2xF0m3pPnlZ5a6yYF8vHtR8b+vOaL1+5KwTgRztUjJZr1Y9");
+      decoded = jwt.verify(token, getJwtSecret());
     } catch (err) {
       return NextResponse.json(
         { error: "Invalid or expired token" },

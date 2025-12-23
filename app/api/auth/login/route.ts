@@ -4,13 +4,6 @@ import Leader from "@/lib/models/Leader";
 import { signToken } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 
-// Validate JWT_SECRET at module load time
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET || JWT_SECRET.length < 32) {
-  console.error("FATAL: JWT_SECRET must be at least 32 characters long");
-  process.exit(1);
-}
-
 export async function POST(request: NextRequest) {
   try {
     await dbConnect();
